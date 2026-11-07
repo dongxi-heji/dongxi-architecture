@@ -53,3 +53,9 @@ This contract does not grant permission to redistribute private data, does not c
 ## Not yet established
 
 No lossless universal architecture representation, live operating system inspection, runtime concurrency proof, continuous source change monitoring, production UX performance, legal clearance for all third-party licenses or historical PR purge is claimed.
+
+## Source-owned standing and conflicting observations
+
+The transport validates a bounded, opaque standing token but **does not define the source's standing vocabulary**. A local source may have a different owner-defined standing than a synthetic fixture. Assessment results never replace or promote that token. The `illustrative_only` / `candidate` states remain explicitly non-authorizing.
+
+An observation must identify its source **and** provide a valid observed revision. If that identity is missing or malformed, the reading is `unbound` even when apparently matching digests or passing tool checks are present. If a necessary source file is positively known to have changed **and** another required file cannot be observed, the result is `stale`, with **both** changed and unknown items retained. A known byte difference is sufficient to invalidate old evidence; missing observations cannot erase that known fact. Unit tests cover these conditions.
