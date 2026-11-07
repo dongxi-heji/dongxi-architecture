@@ -22,8 +22,8 @@ svg{width:100%;height:auto;min-width:640px}.edge{stroke:#778ba6;stroke-width:2.2
 .warn{background:#fff0de;color:#8b4a13}.ok{background:#e8f5ee;color:#256243}
 #sources a{display:block;margin:6px 0;overflow-wrap:anywhere;font-size:12px}
 #assessment{border-left:3px solid #d39b4e;padding:10px;background:#fff9f2;font-size:13px}
-footer{margin:0 auto;max-width:1480px;padding:2px 20px 28px;color:#526276;font-size:12px}
-@media(max-width:900px){main{grid-template-columns:1fr}header{padding:15px}main{padding:10px}}
+.flowlist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding:20px}.flowcard{display:flex;flex-direction:column;gap:8px;text-align:left;min-height:120px;justify-content:center;padding:16px;border:1px solid #afbdd0;border-radius:11px;background:#fff}.flowcard strong{font-size:14px}.flowcard span{font-size:12px;color:#536a83;line-height:1.5}.flowcard.current{border:3px solid #c17a26;background:#fff7ec}.flowcard.current span{color:#5b4328}footer{margin:0 auto;max-width:1480px;padding:2px 20px 28px;color:#526276;font-size:12px}
+@media(max-width:900px){main{grid-template-columns:1fr}header{padding:15px}main{padding:10px}.flowlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -78,8 +78,30 @@ function coords(){
  ?{project:[90,88],controller:[340,88],hive:[595,88],claim:[595,245],work:[340,245],chat:[90,245]}
  :{project:[90,88],controller:[340,88],hive:[595,88],claim:[595,245],work:[340,245],chat:[90,245]};
 }
+function drawFlow(){
+ const holder=document.createElement("div");
+ holder.className="flowlist";
+ const stages=[
+  ["r-candidates","01 · 候选来源","读取存在；排序待建"],
+  ["r-dispatch","02 · 领取请求","端到端编排待接通"],
+  ["r-claim","03 · 原子 Claim","源码已有实现"],
+  ["r-ownership","04 · 唯一所有权","有局部代码与测试"],
+  ["r-handoff","05 · 交棒","局部测试覆盖"],
+  ["r-refill","06 · 释放与补位","完整验收仍开放"]
+ ];
+ for(const [id,title,note] of stages){
+  const b=document.createElement("button");
+  b.className="flowcard"+(selected===id?" current":"");
+  b.setAttribute("aria-pressed",String(selected===id));
+  const t=document.createElement("strong");t.textContent=title;
+  const desc=document.createElement("span");desc.textContent=note;
+  b.append(t,desc);b.addEventListener("click",()=>{selected=id;render()});holder.append(b);
+ }
+ $("diagram").append(holder);
+}
 function draw(){
  $("diagram").replaceChildren();
+ if(view==="behavior"){drawFlow();return;}
  const svg=el("svg",{viewBox:"0 0 790 370",role:"img","aria-label":caseData.views[view].title},$("diagram"));
  const positions=coords(),names=new Map(caseData.nodes.map(n=>[n.id,n]));
  const relations=caseData.views[view].relationIds.map(findItem);
