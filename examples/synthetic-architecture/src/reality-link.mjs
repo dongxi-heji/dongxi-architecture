@@ -72,6 +72,9 @@ export function assessRealityLink(link,observation){
  if(!observation||observation.sourceId!==link.source.id){
   facts.result="unbound";facts.reason="observation_source_identity_mismatch";return facts;
  }
+ if(typeof observation.revision!=="string"||!id.test(observation.revision)){
+  facts.result="unbound";facts.reason="observation_revision_missing_or_invalid";return facts;
+ }
  const fingerprints=observation.fingerprints??{};
  for(const resource of link.scope){
   if(!Object.hasOwn(fingerprints,resource.id)||!digest.test(fingerprints[resource.id]??"")){
@@ -80,14 +83,17 @@ export function assessRealityLink(link,observation){
    facts.changedScope.push(resource.id);
   }
  }
- if(facts.unknownScope.length){
-  facts.reason="required_source_content_not_observed";
-  facts.scopeEquivalence="unknown";
-  return facts;
- }
+ // One directly observed byte change already invalidates the old evidence,
+ // even if other required resources are simultaneously unknown. Keep both
+ // changedScope and unknownScope visible to avoid hiding either fact.
  if(facts.changedScope.length){
   facts.result="stale";facts.reason="source_content_changed";
   facts.scopeEquivalence="changed";
+  return facts;
+ }
+ if(facts.unknownScope.length){
+  facts.reason="required_source_content_not_observed";
+  facts.scopeEquivalence="unknown";
   return facts;
  }
  facts.scopeEquivalence="equal-content-in-scope";
