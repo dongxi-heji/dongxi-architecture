@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install pinned dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund --registry=https://registry.npmjs.org
       - name: Analyze fictional code, verify model and compile UI
         run: npm run build
       - name: Install Chromium
