@@ -67,3 +67,26 @@ export function createFrozenSyntheticScope() {
   throw error;
  }
 }
+
+
+export function guardAssessedFrozenSource(assessment,verifications) {
+ if(!Array.isArray(verifications)||verifications.length<2)
+  throw Error("frozen_snapshot_requires_multiple_checks");
+ const bad=verifications.filter(x=>x?.status!=="verified");
+ const evidence={
+  contract:"dongxi.frozen-source-verification/v0",
+  origin:"allowlisted_immutable_git_blobs",
+  stagedFileCount:Object.keys(PUBLIC_SOURCE_FILES).length,
+  verifyCount:verifications.length,
+  status:bad.length?"unverified":"verified",
+  limitation:"Git blob inputs are immutable; staged copies are rechecked after each tool. This does not make arbitrary outside processes or the host filesystem a trusted security boundary."
+ };
+ if(assessment.result!=="supported-in-scope"||!bad.length)
+  return {...assessment,frozenSource:evidence};
+ return {...assessment,
+  result:"open",
+  reason:"frozen_source_input_integrity_unverified",
+  scopeEquivalence:"unverified_execution_inputs",
+  frozenSource:evidence
+ };
+}
