@@ -71,3 +71,10 @@ The `Re-check source and evidence` button performs a fresh **fixed-action** loca
 The previous `supported-in-scope` result is cleared when the check starts. If the new tool run fails, the display is Open; the old support is not reused. The selected relation and lens stay stable. The initial bootstrap fetch is aborted when the manual check begins, so it cannot overwrite the fresh result.
 
 These are **synthetic integration results only**. The actual private-source adapter has not yet been connected to this browser action; no private file, path or report was introduced into the public repository.
+
+
+## Source consistency during professional checks
+
+The reality replay now samples the original synthetic source fingerprints at three phases: before the static analyzer, between the analyzer and the behavior tests, and after the behavior tests. Each relation is checked against its *own* scope. If a relevant file is observed to differ or cannot be observed at one of those points, a newly passing tool result cannot silently become fresh support.
+
+The UI explicitly labels the `source-check-window` as a non-atomic observation window. This is not a frozen Git tree, a fully isolated build, or a guarantee against changes that are made and restored between samples. The unit tests include a source fingerprint that changes and returns to its original content between observed phases; it is still recognized because the intermediate phase caught it.
