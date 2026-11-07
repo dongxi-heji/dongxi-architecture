@@ -127,3 +127,7 @@ export function readRelationLens(id,lens,data=fixture){
  const reading=data.relationReadings?.[id]?.[lens];
  return typeof reading==="string"&&reading.trim()?reading:null;
 }
+
+export function readRelationContract(id,data=fixture){
+ return data.relationContracts?.[id]??null;
+}
