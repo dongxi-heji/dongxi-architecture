@@ -1,9 +1,19 @@
-import {lazy,Suspense,useState} from 'react'
+import {lazy,Suspense,useEffect,useState} from 'react'
 import {fixture,selectItem,readRelationLens,readRelationContract} from './fixture.mjs'
 import {expectedAnalysis} from './analysis-readout.mjs'
 
 const Diagram = lazy(()=>import('./LikeC4Canvas').then(mod=>({default:mod.LikeC4Canvas})))
 type Selection={kind:'resolved';type:'node'|'relation';id:string}|{kind:'unbound';reason:string}
+type ScopedAssessment = {
+ result:string;reason:string;sourceStanding:string;scopeEquivalence:string;
+ sameRevision:boolean;authorityUnchanged:boolean;changedScope:string[];
+ unknownScope:string[];boundary:string;checkReadings:Array<{criterionId:string;status:string;method:string;evidenceRef:string|null}>;
+}
+type RealityReadout = {
+ contract:string;sourceKind:string;sourceRevision:string;mode:string;
+ assessments:Record<string,ScopedAssessment>;
+ toolRuns:Array<{method:string;status:string;command:string;evidenceRef:string|null}>;
+}
 type Lens='causation'|'meaning'|'association'|'constitution'|'implication'
 const modes:[Lens,string][]=[
  ['causation','Causation'],['meaning','Meaning'],['association','Association'],
@@ -13,10 +23,25 @@ export function App() {
  const [selected,setSelected]=useState('demo_reserve')
  const [reading,setReading]=useState<Lens>('association')
  const [warning,setWarning]=useState('')
+ const [reality,setReality]=useState<RealityReadout|null>(null)
+ const [realityError,setRealityError]=useState<string|null>(null)
+ useEffect(()=>{
+  let mounted=true
+  fetch('/reality-readout.json',{cache:'no-store'})
+   .then(response=>{if(!response.ok)throw Error('evidence_not_generated');return response.json()})
+   .then((data:RealityReadout)=>{
+    if(data.contract!=='dongxi.reality-replay/v0'||data.sourceKind!=='original_synthetic')
+      throw Error('unbound_evidence_contract')
+    if(mounted)setReality(data)
+   })
+   .catch(error=>{if(mounted)setRealityError(error instanceof Error?error.message:'unavailable')})
+  return ()=>{mounted=false}
+ },[])
  const item=selectItem(selected)
  const isRelation=fixture.relations.some(x=>x.id===selected)
  const contract=isRelation?readRelationContract(selected):null
  const lensText=isRelation?readRelationLens(selected,reading):null
+ const scopedReading=reality?.assessments?.[selected]??null
  function accept(result:Selection){
   if(result.kind==='resolved'){setSelected(result.id);setWarning('')}
   else setWarning('This visual shape does not uniquely identify a source relation: '+result.reason)
@@ -68,6 +93,22 @@ export function App() {
      <p>Expected synthetic import graph: {expectedAnalysis.modules.length} modules, {expectedAnalysis.edges.length} local imports.</p>
      <p>Run <code>npm run analyze</code> to actually check this checkout with dependency-cruiser; CI executes it during every build.</p>
      <p className="alert">{expectedAnalysis.limitation}</p>
+    </section>
+    <section className="card" aria-label="Source-bound verification">
+     <h2>Reality connection · bounded evidence</h2>
+     {scopedReading
+       ? <div data-testid="reality-assessment">
+           <p><strong data-testid="reality-status">{scopedReading.result}</strong> — {scopedReading.reason}</p>
+           <p>Content comparison: {scopedReading.scopeEquivalence}. Original relation standing: {scopedReading.sourceStanding}.</p>
+           {scopedReading.checkReadings.map(check=>
+             <p key={check.criterionId}>{check.criterionId}: <strong>{check.status}</strong> via {check.method}</p>)}
+           <p className="hint">Source revision: {reality?.sourceRevision}. The reading is captured by tools at build or dev-server start, not continuously recomputed in the browser.</p>
+           <p className="alert">{scopedReading.boundary}</p>
+         </div>
+       : <p data-testid="reality-assessment">{realityError
+            ? 'Open: '+realityError+'. Run npm run reality:write against this synthetic checkout.'
+            : reality?'No check exists for this illustrative relation; no verification is inferred.'
+              :'Awaiting bounded local source evidence…'}</p>}
     </section>
     <section className="card">
      <h2>Only synthetic sources</h2>
