@@ -126,3 +126,26 @@ test('failed recheck clears prior support and reports Open without changing sour
  await expect(page.getByTestId('reality-status')).toHaveCount(0)
  await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
 });
+
+
+test('source selection shows original fictional code without changing relation or lens identity',async({page})=>{
+ const external:string[]=[]
+ page.on('request',request=>{
+  if(/^https?:\/\//.test(request.url())&&!request.url().startsWith('http://127.0.0.1:5173/'))
+   external.push(request.url())
+ })
+ await page.goto('/')
+ await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
+ await page.getByTestId('inspect-source-ledger').click()
+ await expect(page.getByTestId('source-locator')).toContainText('src/sample-domain/ledger.mjs')
+ await expect(page.getByTestId('source-text')).toContainText('export function recordLoan')
+ await page.getByRole('button',{name:'Constitution',exact:true}).click()
+ await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
+ await expect(page.getByTestId('source-text')).toContainText('createNotice')
+ const actual=page.waitForResponse(res=>res.url().endsWith('/api/reality/recheck')&&res.status()===200)
+ await page.getByTestId('recheck-source').click()
+ await actual
+ await expect(page.getByTestId('reality-status')).toHaveText('supported-in-scope')
+ await expect(page.getByTestId('source-locator')).toContainText('ledger.mjs')
+ expect(external).toEqual([])
+})
