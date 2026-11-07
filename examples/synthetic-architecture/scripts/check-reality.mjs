@@ -26,7 +26,12 @@ export function currentScopeFingerprints() {
 function execute(method,command,args,parseEvidence){
  let raw="",status="unknown",evidenceRef=null;
  try {
-  raw=execFileSync(command,args,{cwd:root,encoding:"utf8",timeout:90000,maxBuffer:3*1024*1024});
+  const childEnv={...process.env};
+  // Running this replay from inside node:test must not turn a nested
+  // independent test command into a child of the parent test harness.
+  delete childEnv.NODE_TEST_CONTEXT;
+  raw=execFileSync(command,args,{cwd:root,encoding:"utf8",timeout:90000,
+    maxBuffer:3*1024*1024,env:childEnv});
   const result=parseEvidence(raw);
   status="passed";
   evidenceRef=result;
