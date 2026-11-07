@@ -80,7 +80,6 @@ export function App() {
             enableRelationshipDetails={false}
             enableRelationshipBrowser={false}
             enableFocusMode={false}
-            showDiagramTitle={false}
             onNodeClick={(node) => accept(resolveLikeC4Node(node, caseData) as Resolution)}
             onEdgeClick={(edge) => accept(resolveLikeC4Edge(edge, caseData) as Resolution)}
           />
