@@ -76,3 +76,21 @@ test("success or contradiction without an attributable evidence reference stays 
  const f=observed();f.checks[1].status="failed";f.checks[1].evidenceRef="";
  assert.equal(assessRealityLink(link,f).result,"open");
 });
+
+
+test("source-owned local standing is preserved verbatim, not reclassified as synthetic",()=>{
+ const local=structuredClone(link);
+ local.subject.standing="source_implemented";
+ local.source.kind="local_private";
+ const result=assessRealityLink(local,observed());
+ assert.equal(result.result,"supported-in-scope");
+ assert.equal(result.sourceStanding,"source_implemented");
+ assert.equal(result.authorityUnchanged,true);
+});
+test("opaque source standing remains syntactically bounded without accepting empty or unsafe tokens",()=>{
+ const local=structuredClone(link);
+ local.subject.standing="";
+ assert(validateRealityLink(local).includes("invalid_source_owned_standing"));
+ local.subject.standing="private authority promoted!";
+ assert(validateRealityLink(local).includes("invalid_source_owned_standing"));
+});
