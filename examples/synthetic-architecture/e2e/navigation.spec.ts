@@ -19,21 +19,35 @@ test('fictional LikeC4 node selection preserves source identity across reading m
 })
 
 test('real visual edge click resolves an invented relation and remains stable across readings',async({page})=>{
+ await page.setViewportSize({width:1600,height:1100})
  await page.goto('/')
+ const diagram=page.locator('.diagram')
+ await diagram.scrollIntoViewIfNeeded()
  const paths=page.locator('.react-flow__edge .react-flow__edge-interaction')
  await expect(paths.first()).toBeAttached({timeout:30000})
- const candidates=await paths.first().evaluate((element:SVGPathElement)=>{
-  const m=element.getScreenCTM()
-  if(!m)throw Error('edge missing screen transform')
-  const own=element.closest('.react-flow__edge')
-  const root=element.getRootNode() as ShadowRoot|Document
-  const len=element.getTotalLength()
-  return [0.12,0.2,0.28,0.38,0.62,0.72,0.8,0.88].map(f=>{
-   const p=element.getPointAtLength(len*f)
-   const x=m.a*p.x+m.c*p.y+m.e,y=m.b*p.x+m.d*p.y+m.f
-   const hit=root.elementFromPoint(x,y)
-   return {x,y,hit:hit?.closest('.react-flow__edge')===own}
-  })
+ // Inspect ALL displayed SVG edges rather than assuming the first generated
+ // edge is inside the visible clipped canvas. This remains an actual mouse click.
+ const candidates=await paths.evaluateAll(elements=>{
+  const hits:Array<{x:number;y:number;hit:boolean;index:number}>=[]
+  for(const [index,item] of elements.entries()){
+   const element=item as SVGPathElement
+   const m=element.getScreenCTM()
+   if(!m)continue
+   const own=element.closest('.react-flow__edge')
+   const root=element.getRootNode() as ShadowRoot|Document
+   const len=element.getTotalLength()
+   for(const f of [0.1,0.18,0.26,0.38,0.5,0.62,0.74,0.82,0.9]){
+    const p=element.getPointAtLength(len*f)
+    const x=m.a*p.x+m.c*p.y+m.e,y=m.b*p.x+m.d*p.y+m.f
+    if(x<0||y<0||x>=innerWidth||y>=innerHeight)continue
+    const target=root.elementFromPoint(x,y)
+    if(target?.closest('.react-flow__edge')===own){
+     hits.push({x,y,hit:true,index})
+     break
+    }
+   }
+  }
+  return hits
  })
  const point=candidates.find(c=>c.hit)
  if(!point)throw Error('No visible edge interaction surface: '+JSON.stringify(candidates))
