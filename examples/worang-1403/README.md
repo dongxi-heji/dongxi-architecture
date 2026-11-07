@@ -74,3 +74,35 @@ node --test examples/worang-1403/*.test.mjs src/adapters/*.test.mjs
 - 引入 `src/check-bundle.mjs` 作为构建回归门：检查初始入口 JS 不超过 350 kB，并确保重图形引擎仍是独立 chunk；发布性能与许可证审查仍开放。
 
 **依然开放：** 从沃壤正式且具 authority 的图 IR 自动读取；专业分析对新版源码的按需执行；构建产物的总体积、锁文件与许可证审计、真实设备性能；#1403 生产端到端验收。以上已验证的是仓库原型，不是生产系统验收。
+
+## 第五轮进展：真正读取沃壤原生来源，并为重新分析设置变化门
+
+**先区分哪些来源真正拥有何种效力。** 在 Worang Git commit `a6b0b93be046f2aeb20e33365fec889e93ae6b2b` 下：
+- `设计要求.md`（blob `9926f5b84737fbfeef74e616e88906291131d529`）是现行设计母本，包含软件设计六角色。读取器只验证固定 blob、定位六角色源行，不自动推定任一 #1403 设计 Claim 已经生效。
+- `成为/图腾/mother-graph.ir.v0.json`（blob `da5781b6bafea511153ef43c14eca56385865c52`）是真实存在的 Worang Semantic Graph IR v0.2，**图元数据明确标记「语义母图候选」**。其单项节点可能有 canonical standing，但**整图不是已经冻结的设计权威**。它内部保留的来源快照 `739c8a1d9d1fe82ea977449546fe52ce39d4d332` 也不能和文件所在的外层 Git commit 混为一谈。
+
+新增 `src/adapters/worang-native-source.mjs` 与 `worang-design-source.mjs`，以 **Git blob OID + 合同版本 + 不变来源身份** 回读，不将现有关系投影自我提升为正式语义源。不把多参与者关系强制转成二元边；例如母图 `r-verify` 有 claim、evidence、criteria、standing 四个参与者，应以关系节点（reification）呈现，不能无说明地画成某两节点的直接因果边。
+
+有本地沃壤 Git checkout 时，在本仓库根目录运行：
+
+```sh
+node examples/worang-1403/inspect-native-ir.mjs \
+  --repo-root /absolute/path/to/worang --relation r-verify
+```
+
+输出会同时列出固定设计母本的六角色源定位、原生母图的关系参与者、完整 provenance 与 standing；只执行本地 Git 读取，**不读工作区未提交改动，不上传私有材料，不写回沃壤**。固定提交若不在本地 clone 中则失败，而不是偷偷改为最新版本。
+
+**真正的专业工具重新执行与结果失效**：新增 `src/adapters/reanalysis-gate.mjs` 与 `reanalyze.mjs`。命令在明确的用户本地沃壤 checkout 上读取 Git 远端身份、执行已固定的 `dependency-cruiser@18.7.2`，对每个实际参与分析的文件逐一比较“案例固定 Git blob”与“当前工作目录文件 blob”，并输出完整静态依赖读数及其适用范围。
+
+为避免向沃壤 checkout 安装依赖，可以在**本仓库根目录**通过 npm 的隔离工具 PATH 执行（第一次安装第三方工具可能访问 npm registry；源码检查在本地完成）：
+
+```sh
+npm exec --yes --package=dependency-cruiser@18.7.2 -- \
+  node examples/worang-1403/reanalyze.mjs --repo-root /absolute/path/to/worang
+```
+
+也可手动指定已安装的 `--analyzer-bin /path/to/depcruise`。CLI 只输出 JSON 到标准输出，不自动写文件、上传源码或改 Git。代码本身拒绝不是 `dongxi-heji/worang` 的 origin、错误的分析器版本、超出 `scripts/` 的模块路径。源码不变时结果只是**有限范围的静态依赖观察**；文件变了或不能确定时，为当前旧案例输出 `open-for-current-case`，不悄悄沿用旧结论。即使文件相同，它也**不会证明生产运行并发正确性、真实 Chat 派工或 #1403 端到端验收**。
+
+**实际核对与边界**：2026-11-07 在 M5 的本地 Worang 工作副本重新运行 dependency-cruiser 18.7.2，仍读到 8 个模块／7 条静态本地依赖；这 8 个文件经 Git blob 逐个对比，和本例绑定的 `a6b0b93...` 快照完全一致。已另外在本地 Git blob 上确认原生母图含 32 个节点、32 条关系、9 个分组，`r-verify` 具四个参与者。新读取／失效适配器与负例由 GitHub Actions CI 执行。
+
+**未称作完成的内容**：新 CLI 对真实沃壤工作副本的端到端执行仍需要在开发工作面按上述命令验收（已经分别验证数据、工具运行和读取边界）；从正式源自动推断出某个 #1403 专属关系及其效力仍不是自动化能力。不能把 Worang 的通用语义母图候选当成 #1403 的现成架构事实。
