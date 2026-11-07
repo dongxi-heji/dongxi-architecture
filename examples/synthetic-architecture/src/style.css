@@ -1,0 +1,17 @@
+*{box-sizing:border-box}
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#24334a;background:#f3f6fa}
+body{margin:0}.app{min-height:100vh}.header{background:#fff;border-bottom:1px solid #d9e3ed;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:23px 30px}
+.kicker{font-size:10px;letter-spacing:.1em;font-weight:800;color:#44738c;text-transform:uppercase;margin:0 0 10px}
+h1{font-size:24px;letter-spacing:-.03em;margin:0 0 9px}h2{font-size:16px;margin:0 0 10px}.sub,.hint,.footnote{font-size:13px;color:#64768b;line-height:1.5}
+.sub{margin:0}.layout{max-width:1550px;padding:18px;margin:auto;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(330px,.9fr);gap:18px}
+.card{background:#fff;border:1px solid #d9e3ed;border-radius:16px;padding:18px 20px;box-shadow:0 2px 8px rgba(24,50,85,.03)}
+.graph{min-width:0;display:flex;flex-direction:column;min-height:680px;overflow:hidden}.card-head{display:flex;justify-content:space-between;align-items:center}
+.label,.tag{display:inline-block;background:#ebf3fa;color:#396b8b;border-radius:8px;padding:6px 10px;font-size:12px}.tag.muted{background:#f5f0e8;color:#806d52}
+.diagram{height:535px;flex:1;min-height:450px;margin:6px -10px}.diagram>div{height:100%}.inspector{display:flex;flex-direction:column;gap:14px;min-width:0}
+.inspector .card p{font-size:13px;line-height:1.65}.inspector code{font-size:12px;overflow-wrap:anywhere;color:#356587;background:#edf4fb;padding:3px 6px;border-radius:5px}
+.tabs{display:flex;flex-wrap:wrap;gap:5px}.tabs button{cursor:pointer;border:1px solid #cbdae5;border-radius:8px;background:#f3f7fb;padding:7px 10px;color:#244d70;font:inherit;font-size:12px}
+.tabs button[aria-pressed=true]{background:#285c85;color:white;border-color:#285c85}.tabs button:focus-visible{outline:3px solid orange;outline-offset:2px}
+.alert{background:#fff3e5;color:#955b27;padding:10px 12px;border-radius:9px;line-height:1.5;font-size:12px}.tool{font-weight:700}
+.loading{padding:30px;color:#6c7990}.footnote{margin-top:auto;border-top:1px solid #ebeff4;padding-top:12px}
+footer{font-size:12px;color:#61748a;max-width:1550px;margin:auto;padding:12px 30px 28px}
+@media(max-width:980px){.layout{grid-template-columns:1fr;padding:10px}.header{padding:16px;flex-wrap:wrap}.graph{min-height:520px}.diagram{height:425px}}
