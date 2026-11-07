@@ -1,6 +1,8 @@
 import {lazy,Suspense,useEffect,useState} from 'react'
 import {fixture,selectItem,readRelationLens,readRelationContract} from './fixture.mjs'
 import {expectedAnalysis} from './analysis-readout.mjs'
+import {listPublicSources} from './source-reading.mjs'
+import {publicSourceSnapshots} from './source-snapshots'
 
 const Diagram = lazy(()=>import('./LikeC4Canvas').then(mod=>({default:mod.LikeC4Canvas})))
 type Selection={kind:'resolved';type:'node'|'relation';id:string}|{kind:'unbound';reason:string}
@@ -25,6 +27,7 @@ export function App() {
  const [warning,setWarning]=useState('')
  const [reality,setReality]=useState<RealityReadout|null>(null)
  const [realityError,setRealityError]=useState<string|null>(null)
+ const [sourceSelection,setSourceSelection]=useState<string|null>(null)
  const [recheckPhase,setRecheckPhase]=useState<'idle'|'checking'|'rechecked'|'open'>('idle')
  const [recheckedAt,setRecheckedAt]=useState<string|null>(null)
  useEffect(()=>{
@@ -44,6 +47,8 @@ export function App() {
  const contract=isRelation?readRelationContract(selected):null
  const lensText=isRelation?readRelationLens(selected,reading):null
  const scopedReading=reality?.assessments?.[selected]??null
+ const sourceChoices=listPublicSources(selected)
+ const chosenSource=sourceChoices.find(source=>source.id===sourceSelection)??null
  async function recheckSource() {
   if(recheckPhase==='checking')return
   setRecheckPhase('checking')
@@ -70,7 +75,7 @@ export function App() {
   }
  }
  function accept(result:Selection){
-  if(result.kind==='resolved'){setSelected(result.id);setWarning('')}
+  if(result.kind==='resolved'){setSelected(result.id);setWarning('');setSourceSelection(null)}
   else setWarning('This visual shape does not uniquely identify a source relation: '+result.reason)
  }
  return <div className="app">
@@ -104,6 +109,27 @@ export function App() {
        <p><strong>Effect (limited):</strong> {contract.effect}</p>
        <p><strong>Standing:</strong> {contract.standing==='synthetic_code_checked'?'source-and-local-test in fictional sample':'diagram-only intention'}</p>
      </div>}
+    </section>
+    <section className="card" aria-label="Selected source locator">
+     <h2>Source locator · public sample only</h2>
+     {sourceChoices.length
+       ? <>
+           <p className="hint">These files are independently invented and were bundled with this demo. Select a file to inspect its actual source snapshot; press Re-check to compare the current checkout.</p>
+           <div className="source-options">
+             {sourceChoices.map(source=>
+               <button type="button" key={source.id} data-testid={'inspect-source-'+source.id}
+                 aria-pressed={sourceSelection===source.id}
+                 onClick={()=>setSourceSelection(source.id)}>
+                 {source.id}
+               </button>)}
+           </div>
+           {chosenSource&&<div className="source-view">
+             <p data-testid="source-locator"><strong>{chosenSource.path}</strong></p>
+             <p className="hint">Bundled public source snapshot · not a live file read and not a private source</p>
+             <pre data-testid="source-text"><code>{publicSourceSnapshots[chosenSource.id]??'Source snapshot not available'}</code></pre>
+           </div>}
+         </>
+       : <p className="hint">No checked source-file binding exists for this illustrated relation. A diagram edge is not sufficient evidence.</p>}
     </section>
     <section className="card">
      <h2>Five lenses · same relation</h2>
