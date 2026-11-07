@@ -81,3 +81,48 @@ test('public demo does not fetch code or assets from an external origin',async({
  await expect(page.getByTestId('lens-question')).toContainText('Which things')
  expect(external).toEqual([])
 })
+
+
+test('a real same-origin UI click reruns both pinned tools and rebinds the same relation',async({page})=>{
+ const external:string[]=[]
+ page.on('request',request=>{
+  const url=request.url()
+  if(/^https?:\/\//.test(url)&&!url.startsWith('http://127.0.0.1:5173/'))external.push(url)
+ })
+ await page.goto('/')
+ await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
+ await expect(page.getByTestId('reality-status')).toHaveText('supported-in-scope')
+ const promise=page.waitForResponse(response=>
+   response.url().endsWith('/api/reality/recheck')&&response.request().method()==='POST'
+ )
+ await page.getByTestId('recheck-source').click()
+ await expect(page.getByTestId('recheck-phase')).toContainText('Previous result cleared.')
+ const response=await promise
+ expect(response.status()).toBe(200)
+ const data=await response.json()
+ expect(data.contract).toBe('dongxi.reality-refresh/v0')
+ expect(data.status).toBe('rechecked')
+ expect(data.readout.toolRuns).toHaveLength(2)
+ expect(data.readout.toolRuns.map((run:{status:string})=>run.status)).toEqual(['passed','passed'])
+ await expect(page.getByTestId('reality-status')).toHaveText('supported-in-scope')
+ await expect(page.getByTestId('recheck-phase')).toContainText('Freshly rechecked')
+ await page.getByRole('button',{name:'Meaning',exact:true}).click()
+ await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
+ expect(external).toEqual([])
+})
+
+test('failed recheck clears prior support and reports Open without changing source identity',async({page})=>{
+ await page.goto('/')
+ await expect(page.getByTestId('reality-status')).toHaveText('supported-in-scope')
+ await page.route('**/api/reality/recheck',async route=>{
+  await route.fulfill({
+   status:503,contentType:'application/json',
+   body:JSON.stringify({contract:'dongxi.reality-refresh/v0',status:'open',reason:'reanalysis_unavailable'})
+  })
+ })
+ await page.getByTestId('recheck-source').click()
+ await expect(page.getByTestId('recheck-phase')).toContainText('Open: fresh check unavailable')
+ await expect(page.getByTestId('reality-assessment')).toContainText('Open: local_reanalysis_unavailable')
+ await expect(page.getByTestId('reality-status')).toHaveCount(0)
+ await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
+});
