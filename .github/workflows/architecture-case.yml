@@ -37,3 +37,27 @@ jobs:
           node examples/worang-1403/export-sgir.mjs > "$RUNNER_TEMP/worang-case.ir.json"
           python3 -m pip install --quiet jsonschema==4.23.0
           python3 -c 'import json, sys, jsonschema; schema=json.load(open(sys.argv[1])); document=json.load(open(sys.argv[2])); jsonschema.Draft202012Validator.check_schema(schema); jsonschema.Draft202012Validator(schema).validate(document); print("Worang Semantic Graph IR v0.2 schema: VALID")' examples/worang-1403/vendor/worang.semantic-graph-ir.v0.2.schema.json "$RUNNER_TEMP/worang-case.ir.json"
+
+  likec4-spike:
+    name: LikeC4 React/Vite spike (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "26"]
+    defaults:
+      run:
+        working-directory: examples/worang-1403/likec4-spike
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install pinned direct dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify identity bridge and merged-edge refusal
+        run: npm test
+      - name: Typecheck and build embedded LikeC4
+        run: npm run build
