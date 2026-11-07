@@ -21,7 +21,7 @@ svg{width:100%;height:auto;min-width:640px}.edge{stroke:#778ba6;stroke-width:2.2
 .small{font-size:12px}.pill{display:inline-block;border-radius:12px;padding:3px 8px;background:#eef2f7;font-size:12px;color:#41566e}
 .warn{background:#fff0de;color:#8b4a13}.ok{background:#e8f5ee;color:#256243}
 #sources a{display:block;margin:6px 0;overflow-wrap:anywhere;font-size:12px}
-#assessment{border-left:3px solid #d39b4e;padding:10px;background:#fff9f2;font-size:13px}
+#assessment{border-left:3px solid #d39b4e;padding:10px;background:#fff9f2;font-size:13px}#tool-reading{padding:11px;border:1px solid #d5e2ed;border-radius:9px;background:#f2f7fb;font-size:12px;overflow-wrap:anywhere}#tool-reading p{margin:6px 0}#tool-reading code{font-size:11px}
 .flowlist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding:20px}.flowcard{display:flex;flex-direction:column;gap:8px;text-align:left;min-height:120px;justify-content:center;padding:16px;border:1px solid #afbdd0;border-radius:11px;background:#fff}.flowcard strong{font-size:14px}.flowcard span{font-size:12px;color:#536a83;line-height:1.5}.flowcard.current{border:3px solid #c17a26;background:#fff7ec}.flowcard.current span{color:#5b4328}footer{margin:0 auto;max-width:1480px;padding:2px 20px 28px;color:#526276;font-size:12px}
 @media(max-width:900px){main{grid-template-columns:1fr}header{padding:15px}main{padding:10px}.flowlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
@@ -53,11 +53,14 @@ svg{width:100%;height:auto;min-width:640px}.edge{stroke:#778ba6;stroke-width:2.2
 <div id="sources"></div>
 <h3>Claim 与证据边界</h3>
 <div id="assessment"></div>
+<h3>专业工具 · 实际静态分析读数</h3>
+<div id="tool-reading" aria-live="polite"></div>
 </aside>
 </main>
 <footer>资料版本：<span id="snapshot"></span>。这是从版本化源码和 Issue 整理的局部表示，未进行本次 M5 生产运行验收；图像本身不建立设计承诺。</footer>
 <script type="module">
 import {caseData,validateCase,findItem,lensReading} from "./case.mjs";
+import {toolReadingFor,analyzerReadout} from "./analysis-readout.mjs";
 const errors=validateCase(caseData);
 if(errors.length){document.getElementById("diagram").textContent="数据校验失败："+errors.join("、");throw Error(errors.join(","));}
 const $=x=>document.getElementById(x);
@@ -149,6 +152,23 @@ function render(){
    const p=document.createElement("p");p.textContent=text;$("assessment").append(p)}
  }else $("assessment").textContent="本对象尚无单独的评价读数；不能把不存在的证据判为失败或成功。";
  $("relation-summary").textContent=item?.detail||"";
+ const tool=toolReadingFor(selected,caseData);
+ $("tool-reading").replaceChildren();
+ if(tool){
+  for(const entry of [
+   tool.tool || "静态依赖分析",
+   tool.scope || "",
+   tool.text,
+   "证据边界："+(tool.boundary || "当前快照与分析范围不一致；不得使用此读数")
+  ]){
+   if(!entry)continue;const p=document.createElement("p");p.textContent=entry;$("tool-reading").append(p);
+  }
+  if(tool.directImports?.length){
+   const h=document.createElement("strong");h.textContent="直接依赖的模块：";$("tool-reading").append(h);
+   const p=document.createElement("p");p.textContent=tool.directImports.join("、");$("tool-reading").append(p);
+  }
+  const command=document.createElement("p");command.textContent="可复现命令："+analyzerReadout.invocation;$("tool-reading").append(command);
+ }else $("tool-reading").textContent="当前选择没有对应的专业分析读数；不据此判断成功或失败。请选择 Hive 或相关 Claim 关系。";
  draw();
 }
 render();
