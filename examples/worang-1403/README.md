@@ -65,3 +65,12 @@ node --test examples/worang-1403/*.test.mjs src/adapters/*.test.mjs
 - 真实浏览器测试最初点击标题文字层被节点容器拦截；修正为点击真实 React Flow 节点容器后通过。不能把最初测试定位器失败误读为 LikeC4 核心交互失败。
 
 **剩余验收／选型约束：** 当前 Chromium 测试证明节点点击、跨镜选中、真实分析读数回显；**尚无端到端浏览器关系连线点击测试**，虽然事件适配与合并边拒绝的单元测试已通过。当前 LikeC4 试验生产构建主 JS 包约 **2,618.34 KB（gzip 762.09 KB）**，有 chunk size 警告。发布前需要分包／懒加载与真实性能、许可证、包锁和可持续更新策略检查，才能最终冻结产品栈。现阶段 `model.c4` 仍是案例投影，而不是自动从 Worang canonical IR 生成。
+
+## 第四轮进展：来源生成、真实关系点击与初始拆包
+
+- 在 `likec4-spike/src/generate-model.mjs` 中建立 `case.mjs → model.c4` **确定性单向投影**，使用 `npm run generate:model` 生成、`npm run check:model` 做字节一致性门槛；重复关系、非法标识和破坏视图对应会失败。**输入仍是 case 实验投影，不是 Worang canonical IR。**
+- 在真实 Chromium 浏览器中点击 LikeC4 节点及 SVG 关系连线，选择结果回读原 ID（本次边读回 `r-candidates`），跨五镜仍保留所选关系；源码来源面板保持与该关系相连。[实际 E2E 和 Node 双版本结果](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42365999931) 为 success：10 项单元测试、两项浏览器交互测试均通过。
+- 使用 `React.lazy` 把 LikeC4 重组件从初始工作面拆为独立 chunk：初始 JS 从约 2,618 kB 降到约 **239 kB**，图形异步模块仍约 **2,381 kB**（gzip 687 kB）。拆包减少初始依赖体积，不等于总下载或运行性能已经过关。
+- 引入 `src/check-bundle.mjs` 作为构建回归门：检查初始入口 JS 不超过 350 kB，并确保重图形引擎仍是独立 chunk；发布性能与许可证审查仍开放。
+
+**依然开放：** 从沃壤正式且具 authority 的图 IR 自动读取；专业分析对新版源码的按需执行；构建产物的总体积、锁文件与许可证审计、真实设备性能；#1403 生产端到端验收。以上已验证的是仓库原型，不是生产系统验收。
