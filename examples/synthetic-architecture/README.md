@@ -59,7 +59,7 @@ The outcome is interpreted as **supported-in-scope**, **stale**, **open**, **con
 
 The entry page now shows the assessed status only for selected relations with real source bindings. The generated `public/reality-readout.json` is ignored by Git and recreated by `npm run build` / `npm run dev`. Its status is captured at **build/dev startup**; edit source code and rerun `npm run reality:show` or restart to refresh. The tests include unchanged, changed, missing, wrong identity, decisive vs nondecisive failures, and source standing that cannot be promoted.
 
-[Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42381335477) validated **38 unit tests, 3 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 238 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
+[Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42384357139) validated **50 unit tests, 6 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 242 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
 
 
 ## Interactive source inspection and explicit recheck
