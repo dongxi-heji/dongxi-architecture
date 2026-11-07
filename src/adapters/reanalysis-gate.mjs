@@ -9,6 +9,22 @@ export const ANALYZER_VERSION = "18.7.2";
 export const ANALYZER_ENTRY = "scripts/lib/durable-hive-runtime.mjs";
 export const ANALYZER_INCLUDE = "^scripts";
 
+// Only GitHub transport spellings for the explicit expected origin are accepted.
+// A checkout of an unrelated project cannot be passed off as the Worang source.
+export function remoteMatchesRepository(remote,repository) {
+  if(typeof remote!=="string"||typeof repository!=="string")return false;
+  const text=remote.trim();
+  const prefix=[
+    "https://github.com/","http://github.com/","git@github.com:",
+    "ssh://git@github.com/","ssh://git@ssh.github.com:443/"
+  ];
+  const match=prefix.find(x=>text.startsWith(x));
+  if(!match)return false;
+  const path=text.slice(match.length).replace(/\.git$/,"").replace(/\/$/,"");
+  return path===repository;
+}
+
+
 function validRepoPath(path) {
   return typeof path==="string" && path.startsWith("scripts/") &&
     !path.includes("\\") && !path.includes("\0") &&
@@ -95,6 +111,10 @@ function readWorktreeBlob(root,path) {
 export function replayOnCheckout({repoRoot,analyzerBin,caseData}) {
   if(typeof repoRoot!=="string"||!repoRoot.trim())throw new Error("missing_repo_root");
   if(typeof analyzerBin!=="string"||!analyzerBin.trim())throw new Error("analyzer_bin_required");
+  const remote=execFileSync("git",["-C",repoRoot,"remote","get-url","origin"],
+    {encoding:"utf8",timeout:15000}).trim();
+  if(!remoteMatchesRepository(remote,caseData.snapshot.repository))
+    throw new Error("checkout_repository_identity_mismatch");
   const version=execFileSync(analyzerBin,["--version"],{encoding:"utf8",timeout:15000}).trim();
   if(version!==ANALYZER_VERSION)throw new Error("analyzer_version_mismatch:"+version);
   const commit=execFileSync("git",["-C",repoRoot,"rev-parse","HEAD"],
