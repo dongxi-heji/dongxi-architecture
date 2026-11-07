@@ -1,0 +1,29 @@
+// Experimental, read-only projection of Worang #1403's case.mjs.
+// Model declarations are *not* a new architecture authority.
+// Case identities are verified against the DSL by src/bridge.test.mjs.
+specification {
+  element component
+}
+
+model {
+  project = component 'GitHub Project #1'
+  controller = component '队列与补位控制'
+  hive = component 'Durable Hive'
+  claim = component '活跃 Claim'
+  work = component 'Work 同一性'
+  chat = component 'Chat 执行槽'
+
+  project -> controller '提供待筛选候选'
+  controller -> hive '请求领取（设计目标）'
+  hive -> claim '事务性建立 Claim'
+  claim -> work '约束同一 Work 的领取'
+  hive -> chat '交棒与过渡槽'
+  chat -> controller '释放后补位（设计目标）'
+}
+
+views {
+  view index {
+    title 'Worang #1403 · 结构与责任'
+    include *
+  }
+}
