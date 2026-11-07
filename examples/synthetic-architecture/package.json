@@ -8,7 +8,7 @@
     "check:model": "node scripts/generate-model.mjs --check",
     "generate:model": "node scripts/generate-model.mjs --write",
     "analyze": "node scripts/check-analysis.mjs",
-    "test": "npm run check:model && node --test src/*.test.mjs",
+    "test": "npm run check:model && node --test src/*.test.mjs src/sample-domain/*.test.mjs",
     "build": "npm run analyze && npm test && tsc --noEmit && vite build && node scripts/check-bundle.mjs",
     "test:e2e": "playwright test"
   },
