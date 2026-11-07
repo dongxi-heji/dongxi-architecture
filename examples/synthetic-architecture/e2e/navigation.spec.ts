@@ -7,6 +7,8 @@ test('fictional LikeC4 node selection preserves source identity across reading m
  await expect(page.getByTestId('selected-id')).toHaveText('demo_reserve')
  await expect(page.getByTestId('reality-status')).toHaveText('supported-in-scope',{timeout:20000})
  await expect(page.getByTestId('reality-assessment')).toContainText('equal-content-in-scope')
+ await expect(page.getByTestId('source-check-window')).toContainText('equal-at-observation-points')
+ await expect(page.getByTestId('source-check-window')).toContainText('not an atomic snapshot')
  const node=page.locator('.react-flow__node').filter({hasText:'Loan API'}).first()
  await expect(node).toBeVisible({timeout:30000})
  await node.click()
