@@ -3,10 +3,12 @@ on:
   push:
     paths:
       - "examples/worang-1403/**"
+      - "src/adapters/**"
       - ".github/workflows/architecture-case.yml"
   pull_request:
     paths:
       - "examples/worang-1403/**"
+      - "src/adapters/**"
       - ".github/workflows/architecture-case.yml"
 jobs:
   case:
@@ -18,9 +20,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check modules
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check ESM modules
         run: |
           node --check examples/worang-1403/case.mjs
           node --check examples/worang-1403/case.test.mjs
-      - name: Run source-bound projection regressions
-        run: node --test examples/worang-1403/case.test.mjs
+          node --check examples/worang-1403/analysis-readout.mjs
+          node --check examples/worang-1403/export-sgir.mjs
+          node --check src/adapters/worang-sgir-v02.mjs
+      - name: Run identity, provenance, boundary and negative regression tests
+        run: node --test examples/worang-1403/*.test.mjs src/adapters/*.test.mjs
+      - name: Validate exact Worang IR v0.2 schema
+        run: |
+          node examples/worang-1403/export-sgir.mjs > "$RUNNER_TEMP/worang-case.ir.json"
+          python3 -m pip install --quiet jsonschema==4.23.0
+          python3 -c 'import json, sys, jsonschema; schema=json.load(open(sys.argv[1])); document=json.load(open(sys.argv[2])); jsonschema.Draft202012Validator.check_schema(schema); jsonschema.Draft202012Validator(schema).validate(document); print("Worang Semantic Graph IR v0.2 schema: VALID")' examples/worang-1403/vendor/worang.semantic-graph-ir.v0.2.schema.json "$RUNNER_TEMP/worang-case.ir.json"
