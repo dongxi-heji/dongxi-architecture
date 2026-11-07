@@ -94,3 +94,22 @@ test("opaque source standing remains syntactically bounded without accepting emp
  local.subject.standing="private authority promoted!";
  assert(validateRealityLink(local).includes("invalid_source_owned_standing"));
 });
+
+
+test("an observed changed file invalidates previous evidence even when another scope entry is missing",()=>{
+ const o=observed();
+ o.fingerprints.ledger="git-blob-sha1:"+"c".repeat(40);
+ delete o.fingerprints.api;
+ const result=assessRealityLink(link,o);
+ assert.equal(result.result,"stale");
+ assert.deepEqual(result.changedScope,["ledger"]);
+ assert.deepEqual(result.unknownScope,["api"]);
+});
+test("missing or invalid observed source revision cannot inherit bounded support",()=>{
+ const o=observed();
+ delete o.revision;
+ assert.equal(assessRealityLink(link,o).result,"unbound");
+ assert.equal(assessRealityLink(link,o).reason,"observation_revision_missing_or_invalid");
+ o.revision="wrong revision token with spaces";
+ assert.equal(assessRealityLink(link,o).result,"unbound");
+});
