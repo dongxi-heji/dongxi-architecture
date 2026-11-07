@@ -68,3 +68,12 @@ The public fixture now supports `select a source-bound relation → inspect perm
 An explicit recheck aborts the initial bootstrap fetch and withdraws earlier success until fresh verification completes. A failed check shows Open. The source preview is marked as **bundled source**, not a freshly read local worktree file. Production builds retain build-time evidence display only; there is no recheck endpoint.
 
 A private local workface will require an independently authorized private adapter and a distinct browser end-to-end verification. Synthetic interaction does not prove private browser functionality.
+
+
+## Source check-window consistency
+
+The bounded check runner now fingerprints the declared synthetic source resources **before the static analyzer, between static analysis and behavior tests, and after both tools complete**. The source-window guard evaluates those samples per relation's own declared scope, rather than assuming a working directory is fixed throughout execution.
+
+A changed observed fingerprint, or a missing required fingerprint at any sampled boundary, prevents a *new* `supported-in-scope` conclusion. A source that is already `stale` relative to its bound snapshot retains that stronger observed fact. An unrelated changed resource outside a relation's scope does not invalidate its evidence.
+
+**Limit:** three samples are not an atomic filesystem snapshot. A change that happens and is restored entirely between samples may escape detection. For stronger assurances, a later private adapter should analyze an immutable content-addressed snapshot or validated isolated worktree. This public integration is a fail-closed improvement, not a claim of full transactional source isolation.
