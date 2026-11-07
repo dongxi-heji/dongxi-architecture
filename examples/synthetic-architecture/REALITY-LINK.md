@@ -59,3 +59,12 @@ No lossless universal architecture representation, live operating system inspect
 The transport validates a bounded, opaque standing token but **does not define the source's standing vocabulary**. A local source may have a different owner-defined standing than a synthetic fixture. Assessment results never replace or promote that token. The `illustrative_only` / `candidate` states remain explicitly non-authorizing.
 
 An observation must identify its source **and** provide a valid observed revision. If that identity is missing or malformed, the reading is `unbound` even when apparently matching digests or passing tool checks are present. If a necessary source file is positively known to have changed **and** another required file cannot be observed, the result is `stale`, with **both** changed and unknown items retained. A known byte difference is sufficient to invalidate old evidence; missing observations cannot erase that known fact. Unit tests cover these conditions.
+
+
+## Interaction seam: user-triggered verification, not always-on monitoring
+
+The public fixture now supports `select a source-bound relation → inspect permitted fictional source → switch lenses → recheck source and tools → return a bounded evidence reading`. The local development request is a predeclared action; it accepts no browser-provided command, file path, external URL or private repository.
+
+An explicit recheck aborts the initial bootstrap fetch and withdraws earlier success until fresh verification completes. A failed check shows Open. The source preview is marked as **bundled source**, not a freshly read local worktree file. Production builds retain build-time evidence display only; there is no recheck endpoint.
+
+A private local workface will require an independently authorized private adapter and a distinct browser end-to-end verification. Synthetic interaction does not prove private browser functionality.
