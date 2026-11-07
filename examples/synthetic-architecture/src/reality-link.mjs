@@ -15,8 +15,11 @@ export function validateRealityLink(link) {
  if(!id.test(link?.id??""))errors.push("invalid_link_id");
  if(!id.test(link?.subject?.id??"")||link?.subject?.type!=="relation")
   errors.push("invalid_relation_subject");
- if(!["illustrative_only","synthetic_code_checked","candidate"].includes(link?.subject?.standing))
-  errors.push("unsupported_subject_standing");
+ // The owner of the source defines standing. The transport preserves its
+ // opaque token; it does not define a global standing vocabulary.
+ if(typeof link?.subject?.standing!=="string"||
+    !/^[a-z][a-z0-9_-]{0,127}$/.test(link.subject.standing))
+  errors.push("invalid_source_owned_standing");
  if(!id.test(link?.source?.id??"")||!id.test(link?.source?.revision??""))
   errors.push("unbound_source_identity");
  if(!["synthetic","local_private"].includes(link?.source?.kind))
