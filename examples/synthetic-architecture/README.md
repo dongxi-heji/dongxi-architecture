@@ -78,3 +78,12 @@ These are **synthetic integration results only**. The actual private-source adap
 The reality replay now samples the original synthetic source fingerprints at three phases: before the static analyzer, between the analyzer and the behavior tests, and after the behavior tests. Each relation is checked against its *own* scope. If a relevant file is observed to differ or cannot be observed at one of those points, a newly passing tool result cannot silently become fresh support.
 
 The UI explicitly labels the `source-check-window` as a non-atomic observation window. This is not a frozen Git tree, a fully isolated build, or a guarantee against changes that are made and restored between samples. The unit tests include a source fingerprint that changes and returns to its original content between observed phases; it is still recognized because the intermediate phase caught it.
+
+
+## Pinned Git-blob execution snapshot
+
+The public case now uses `scripts/frozen-source.mjs` to read exactly five **known synthetic Git blob object IDs** from its own public repository, independently verify the content hashes, and stage temporary read-only copies. The actual dependency-cruiser run and fictional Node behavior tests operate on those copies. The stage is checked at three boundaries and removed whether the checks succeed or fail. An on-demand local recheck follows the same path.
+
+The UI and the generated evidence record distinguish `sourceSnapshot` (which source bytes the tools actually executed) from `sourceObservation` (when the mutable checkout was compared to those bound bytes). A green tool run only supports the declared relation while its current observed scoped content still matches the bound snapshot. It does not establish continuous monitoring, complete repository equivalence, production runtime correctness, or secure isolation from hostile local processes.
+
+Unlike the earlier sampled-worktree-only runner, edits to the checkout during the tool call cannot change the staged Git-object bytes the tools are intended to analyze. This guards the tested input identity, not every possible filesystem adversary or a transient change in the live checkout.
