@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worang.local/schemas/semantic-graph-ir.v0.schema.json",
+  "title": "Worang Semantic Graph IR v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "graph", "nodes", "relations", "groups", "legend", "view"],
+  "properties": {
+    "contract": { "const": "worang.semantic-graph-ir" },
+    "version": { "const": "0.2" },
+    "graph": { "$ref": "#/$defs/graphMeta" },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "groups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "legend": { "$ref": "#/$defs/legend" },
+    "view": { "$ref": "#/$defs/view" }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonEmptyString" },
+        "anchor": { "type": "string" },
+        "pointer": { "type": "string" },
+        "sha": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "standing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic", "lifetime"],
+      "properties": {
+        "semantic": {
+          "enum": ["canonical", "projection", "derived", "accepted_workbench", "candidate", "situated"]
+        },
+        "lifetime": {
+          "enum": ["action", "scene", "session", "snapshot", "durable", "canonical"]
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "graphMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "question", "sourceSnapshot"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "question": { "$ref": "#/$defs/nonEmptyString" },
+        "sourceSnapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "enum": ["git_commit", "manual_set", "snapshot"] },
+            "value": { "$ref": "#/$defs/nonEmptyString" },
+            "paths": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "kind", "layer", "definition", "answers", "standing", "sourceRefs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "term": { "type": "string" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "kind": {
+          "enum": [
+            "entity", "state", "process", "representation", "question", "claim",
+            "model", "possibility", "judgment", "goal", "condition", "space",
+            "continuum", "index", "artifact", "readout", "operator"
+          ]
+        },
+        "layer": {
+          "enum": [
+            "reality", "subject", "workface", "knowledge", "relation_reading",
+            "value", "judgment", "action", "readback", "trace", "formation", "meta"
+          ]
+        },
+        "definition": { "$ref": "#/$defs/nonEmptyString" },
+        "answers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "standing": { "$ref": "#/$defs/standing" },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sourceRef" }
+        },
+        "qualifiers": { "type": "object" },
+        "renderHint": { "$ref": "#/$defs/nodeRenderHint" }
+      }
+    },
+    "relationLens": {
+      "enum": ["causality", "meaning", "association", "constitution", "entailment"]
+    },
+    "relationFamily": {
+      "enum": [
+        "causal", "meaning", "associative", "constitutive", "entailment",
+        "evidential", "operational", "temporal", "indexical", "instantiation", "projection"
+      ]
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "role", "direction"],
+      "properties": {
+        "nodeId": { "$ref": "#/$defs/nonEmptyString" },
+        "role": { "$ref": "#/$defs/nonEmptyString" },
+        "direction": { "enum": ["in", "out", "context"] },
+        "required": { "type": "boolean" },
+        "order": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "label", "predicate", "family", "participants", "modality",
+        "answers", "standing", "sourceRefs"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "predicate": { "$ref": "#/$defs/nonEmptyString" },
+        "family": { "$ref": "#/$defs/relationFamily" },
+        "primaryLens": {
+          "oneOf": [
+            { "$ref": "#/$defs/relationLens" },
+            { "type": "null" }
+          ]
+        },
+        "secondaryLenses": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/relationLens" }
+        },
+        "participants": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/participant" }
+        },
+        "modality": {
+          "enum": ["asserted", "conditional", "possible", "candidate", "callable", "projected"]
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "answers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "standing": { "$ref": "#/$defs/standing" },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sourceRef" }
+        },
+        "qualifiers": { "type": "object" },
+        "renderHint": { "$ref": "#/$defs/relationRenderHint" }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "kind", "question", "memberIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "kind": { "enum": ["layer", "workface", "space", "scene", "legend"] },
+        "question": { "$ref": "#/$defs/nonEmptyString" },
+        "memberIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "renderHint": { "type": "object" }
+      }
+    },
+    "nodeRenderHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "enum": ["rect", "round", "diamond", "circle", "stadium", "subroutine", "hexagon"]
+        },
+        "emphasis": { "enum": ["normal", "primary", "secondary", "quiet"] },
+        "className": { "type": "string" }
+      }
+    },
+    "relationRenderHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["direct_edge", "reified_node", "bracket"] },
+        "line": { "enum": ["solid", "dashed"] },
+        "className": { "type": "string" }
+      }
+    },
+    "legend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationTags", "lineSemantics", "nodeSemantics"],
+      "properties": {
+        "relationTags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "label", "question"],
+            "properties": {
+              "key": { "$ref": "#/$defs/nonEmptyString" },
+              "label": { "$ref": "#/$defs/nonEmptyString" },
+              "question": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        },
+        "lineSemantics": { "type": "object" },
+        "nodeSemantics": { "type": "object" },
+        "notes": { "type": "string" }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["renderer", "direction", "legendPlacement"],
+      "properties": {
+        "renderer": { "enum": ["mermaid", "cytoscape", "svg", "other"] },
+        "direction": { "enum": ["LR", "RL", "TB", "BT"] },
+        "legendPlacement": {
+          "enum": ["bottom-right-preferred", "bottom-left-preferred", "top-right-preferred", "top-left-preferred"]
+        },
+        "showRelationTags": { "type": "boolean" },
+        "showStanding": { "type": "boolean" },
+        "showLayerLabels": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
