@@ -1,20 +1,22 @@
 import {lazy,Suspense,useState} from 'react'
-import {fixture,selectItem} from './fixture.mjs'
+import {fixture,selectItem,readRelationLens,readRelationContract} from './fixture.mjs'
 import {expectedAnalysis} from './analysis-readout.mjs'
 
 const Diagram = lazy(()=>import('./LikeC4Canvas').then(mod=>({default:mod.LikeC4Canvas})))
 type Selection={kind:'resolved';type:'node'|'relation';id:string}|{kind:'unbound';reason:string}
-type ViewMode='structure'|'behavior'|'change'|'evidence'|'uncertainty'
-const modes:[ViewMode,string][]=[
- ['structure','Structure'],['behavior','Behavior'],['change','Change'],
- ['evidence','Evidence'],['uncertainty','Uncertainty']
+type Lens='causation'|'meaning'|'association'|'constitution'|'implication'
+const modes:[Lens,string][]=[
+ ['causation','Causation'],['meaning','Meaning'],['association','Association'],
+ ['constitution','Constitution'],['implication','Implication']
 ]
 export function App() {
  const [selected,setSelected]=useState('demo_reserve')
- const [reading,setReading]=useState<ViewMode>('structure')
+ const [reading,setReading]=useState<Lens>('association')
  const [warning,setWarning]=useState('')
  const item=selectItem(selected)
  const isRelation=fixture.relations.some(x=>x.id===selected)
+ const contract=isRelation?readRelationContract(selected):null
+ const lensText=isRelation?readRelationLens(selected,reading):null
  function accept(result:Selection){
   if(result.kind==='resolved'){setSelected(result.id);setWarning('')}
   else setWarning('This visual shape does not uniquely identify a source relation: '+result.reason)
@@ -45,13 +47,19 @@ export function App() {
      <code data-testid="selected-id">{selected}</code>
      <p>{item?.detail??'The selected element has no modeled source.'}</p>
      <p className="tag muted">invented illustration, no production standing</p>
+     {contract&&<div data-testid="relation-contract" className="relation-contract">
+       <p><strong>Establishment:</strong> {contract.establishment}</p>
+       <p><strong>Effect (limited):</strong> {contract.effect}</p>
+       <p><strong>Standing:</strong> {contract.standing==='synthetic_code_checked'?'source-and-local-test in fictional sample':'diagram-only intention'}</p>
+     </div>}
     </section>
     <section className="card">
-     <h2>Five reading questions</h2>
+     <h2>Five lenses · same relation</h2>
      <div className="tabs" aria-label="Reading mode">
        {modes.map(([key,name])=><button key={key} type="button" aria-pressed={reading===key} onClick={()=>setReading(key)}>{name}</button>)}
      </div>
-     <p data-testid="reading">{fixture.readings[reading]}</p>
+     <h3 data-testid="lens-question">{fixture.lensQuestions[reading]}</h3>
+     <p data-testid="reading">{lensText??'Select a relation in the diagram to read this lens in its own context. A node has no automatic relation claim.'}</p>
      <p className="hint">Changing the reading does not change the selected source identity or create evidence.</p>
     </section>
     <section className="card">
