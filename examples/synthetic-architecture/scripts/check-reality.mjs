@@ -50,7 +50,7 @@ export function replayPublicReality() {
     return "sha256:"+createHash("sha256").update(normalized).digest("hex");
    });
  const behaviorResult=execute("node:test",process.execPath,
-   ["--test","src/sample-domain/behavior.test.mjs"],raw=>{
+   ["--test","--test-reporter=tap","src/sample-domain/behavior.test.mjs"],raw=>{
     const count=/# tests\s+(\d+)/.exec(raw)?.[1];
     const passed=/# pass\s+(\d+)/.exec(raw)?.[1];
     const failed=/# fail\s+(\d+)/.exec(raw)?.[1];
@@ -66,7 +66,7 @@ export function replayPublicReality() {
   toolRuns:[
    {method:"dependency-cruiser@18.7.2",command:"node scripts/check-analysis.mjs",
     status:staticResult.status,evidenceRef:staticResult.evidenceRef},
-   {method:"node:test",command:"node --test src/sample-domain/behavior.test.mjs",
+   {method:"node:test",command:"node --test --test-reporter=tap src/sample-domain/behavior.test.mjs",
     status:behaviorResult.status,evidenceRef:behaviorResult.evidenceRef}
   ],
   assessments:{}
