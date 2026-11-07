@@ -1,0 +1,26 @@
+name: Architecture #1403 case smoke
+on:
+  push:
+    paths:
+      - "examples/worang-1403/**"
+      - ".github/workflows/architecture-case.yml"
+  pull_request:
+    paths:
+      - "examples/worang-1403/**"
+      - ".github/workflows/architecture-case.yml"
+jobs:
+  case:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check modules
+        run: |
+          node --check examples/worang-1403/case.mjs
+          node --check examples/worang-1403/case.test.mjs
+      - name: Run source-bound projection regressions
+        run: node --test examples/worang-1403/case.test.mjs
