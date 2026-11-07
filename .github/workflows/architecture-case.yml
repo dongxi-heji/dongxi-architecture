@@ -30,6 +30,11 @@ jobs:
           node --check examples/worang-1403/analysis-readout.mjs
           node --check examples/worang-1403/export-sgir.mjs
           node --check src/adapters/worang-sgir-v02.mjs
+          node --check src/adapters/worang-native-source.mjs
+          node --check src/adapters/worang-design-source.mjs
+          node --check src/adapters/reanalysis-gate.mjs
+          node --check examples/worang-1403/inspect-native-ir.mjs
+          node --check examples/worang-1403/reanalyze.mjs
       - name: Run identity, provenance, boundary and negative regression tests
         run: node --test examples/worang-1403/*.test.mjs src/adapters/*.test.mjs
       - name: Validate exact Worang IR v0.2 schema
