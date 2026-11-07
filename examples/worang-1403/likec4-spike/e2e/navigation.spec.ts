@@ -8,8 +8,8 @@ test('click a real LikeC4 node, keep the same domain identity across five lenses
   await expect(page.getByTestId('likec4-view')).toBeVisible()
 
   // LikeC4 renders into open shadow roots. Playwright text locators traverse them.
-  const hive = page.getByText('Durable Hive', { exact: true }).first()
-  await expect(hive).toBeVisible({ timeout: 45_000 })
+  const hive = page.locator('.react-flow__node').filter({ hasText: 'Durable Hive' }).first()
+  await expect(hive).toBeVisible({ timeout: 30_000 })
   await hive.click()
   await expect(page.getByTestId('selected-id')).toHaveText('hive')
   await expect(page.getByTestId('tool-reading')).toContainText('dependency-cruiser 18.7.2')
