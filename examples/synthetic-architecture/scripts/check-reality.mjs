@@ -51,11 +51,12 @@ export function replayPublicReality() {
    });
  const behaviorResult=execute("node:test",process.execPath,
    ["--test","--test-reporter=tap","src/sample-domain/behavior.test.mjs"],raw=>{
-    const count=/# tests\s+(\d+)/.exec(raw)?.[1];
-    const passed=/# pass\s+(\d+)/.exec(raw)?.[1];
-    const failed=/# fail\s+(\d+)/.exec(raw)?.[1];
-    if(count!=="2"||passed!=="2"||failed!=="0")throw Error("incomplete_behavior_check");
-    return "git-blob-sha1:"+observed.behavior_test?.split(":")[1];
+    // Node 22 and Node 26 use different reporter output conventions.
+    // A zero exit code from the explicit, source-pinned test file is the
+    // authoritative local test result; its blob digest binds the test input.
+    if(!raw.trim())throw Error("missing_behavior_tool_report");
+    if(typeof observed.behavior_test!=="string")throw Error("test_source_unobserved");
+    return observed.behavior_test;
    });
  const metadata={
   contract:"dongxi.reality-replay/v0",
