@@ -1,9 +1,9 @@
 // Independently invented fictional demo. No private upstream source files,
 // issue IDs, code symbols, deployment details or undisclosed provenance.
-const ref = {kind:"synthetic",path:"src/fixture.mjs",revision:"library-demo-v1"}
+const ref = {kind:"synthetic",path:"src/fixture.mjs",revision:"library_demo_v1"}
 export const fixture={
   contract:"dongxi.synthetic-architecture/v1",
-  source:{kind:"original_synthetic",revision:"library-demo-v1",
+  source:{kind:"original_synthetic",revision:"library_demo_v1",
     disclosure:"All names and relationships are made up for this public example."},
   title:"Fictional Neighborhood Library",
   nodes:[
