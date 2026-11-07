@@ -89,7 +89,7 @@ function draw(){
   const ax=a[0]+70,ay=a[1]+26,bx=b[0]+70,by=b[1]+26;
   const key=r.from+"-"+r.to;
   const num=drawn.get(key)||0;drawn.set(key,num+1);
-  const path=el("line",{x1:ax,y1:ay,x2:bx,y2:by,class:"edge"+(selected===r.id?" selected":""),stroke:undefined},svg);
+  const path=el("line",{x1:ax,y1:ay,x2:bx,y2:by,class:"edge"+(selected===r.id?" selected":"")},svg);
   // Transparent hit target makes relationships easy to select.
   const hit=el("line",{x1:ax,y1:ay,x2:bx,y2:by,class:"edgeHit",tabindex:"0",role:"button","aria-label":r.label},svg);
   hit.addEventListener("click",()=>{selected=r.id;render()});
