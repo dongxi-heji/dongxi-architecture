@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {caseData} from "../../examples/worang-1403/case.mjs";
-import {normalizeCruiserResult,compareSourceScope,makeReplayReadout} from "./reanalysis-gate.mjs";
+import {normalizeCruiserResult,compareSourceScope,makeReplayReadout,remoteMatchesRepository} from "./reanalysis-gate.mjs";
 const sha="a".repeat(40);
 const other="b".repeat(40);
 const json={modules:[
@@ -51,3 +51,12 @@ test("rejects changed tool versions and unbounded paths / incomplete graph",()=>
  dependencies:[{resolved:"scripts/lib/missing.mjs"}]}]}),/incomplete_local_dependency_scope/);
 });
 const ANALYZER_ENTRY="scripts/lib/durable-hive-runtime.mjs";
+
+test("Git remote provenance must match the source repository exactly",()=>{
+ assert(remoteMatchesRepository("ssh://git@ssh.github.com:443/dongxi-heji/worang.git","dongxi-heji/worang"));
+ assert(remoteMatchesRepository("git@github.com:dongxi-heji/worang.git","dongxi-heji/worang"));
+ assert(remoteMatchesRepository("https://github.com/dongxi-heji/worang","dongxi-heji/worang"));
+ assert(!remoteMatchesRepository("https://github.com/other/worang.git","dongxi-heji/worang"));
+ assert(!remoteMatchesRepository("file:///tmp/worang","dongxi-heji/worang"));
+ assert(!remoteMatchesRepository("https://github.com/dongxi-heji/worang-fork","dongxi-heji/worang"));
+});
