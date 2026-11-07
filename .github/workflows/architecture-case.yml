@@ -61,3 +61,16 @@ jobs:
         run: npm test
       - name: Typecheck and build embedded LikeC4
         run: npm run build
+      - name: Install Chromium for browser verification
+        if: matrix.node == '22'
+        run: npx playwright install --with-deps chromium
+      - name: Verify real browser node click and five-lens continuity
+        if: matrix.node == '22'
+        run: npm run test:e2e
+      - name: Upload browser failure trace
+        if: failure() && matrix.node == '22'
+        uses: actions/upload-artifact@v4
+        with:
+          name: likec4-browser-failure
+          path: examples/worang-1403/likec4-spike/test-results/
+          if-no-files-found: ignore
