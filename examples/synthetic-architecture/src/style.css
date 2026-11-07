@@ -21,3 +21,11 @@ footer{font-size:12px;color:#61748a;max-width:1550px;margin:auto;padding:12px 30
 .recheck-controls button:focus-visible{outline:3px solid orange;outline-offset:2px}
 .recheck-controls button:disabled{opacity:.55;cursor:wait}
 .recheck-controls p{font-size:12px;line-height:1.5;color:#526c83;margin:8px 0 0}
+
+.source-options{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.source-options button{border:1px solid #b9cede;background:#f6f9fb;color:#315b78;padding:8px 10px;border-radius:8px;font:inherit;font-size:12px;cursor:pointer}
+.source-options button[aria-pressed=true]{background:#315b78;border-color:#315b78;color:#fff}
+.source-options button:focus-visible{outline:3px solid orange;outline-offset:2px}
+.source-view{border:1px solid #e1e8ee;background:#f9fbfd;border-radius:10px;padding:10px 12px}
+.source-view pre{font-size:11px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;color:#24334a}
+.source-view code{font:inherit;color:inherit;padding:0;background:transparent}
