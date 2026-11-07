@@ -14,7 +14,7 @@ test("a real analyzer + behavior subprocess creates only limited supported readi
  assert.equal(report.contract,"dongxi.reality-replay/v0");
  assert.equal(report.sourceKind,"original_synthetic");
  assert.equal(report.toolRuns.length,2);
- assert(report.toolRuns.every(x=>x.status==="passed"&&x.evidenceRef));
+ assert(report.toolRuns.every(x=>x.status==="passed"&&x.evidenceRef),JSON.stringify(report.toolRuns));
  assert.equal(report.assessments.demo_lookup.result,"supported-in-scope");
  assert.equal(report.assessments.demo_reserve.result,"supported-in-scope");
  assert(report.assessments.demo_reserve.authorityUnchanged);
