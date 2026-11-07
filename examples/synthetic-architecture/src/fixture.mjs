@@ -22,12 +22,64 @@ export const fixture={
     {id:"demo_notify",from:"dispatch",to:"notice",label:"requests a mock notice",detail:"The simulated delivery invokes a dummy notice worker.",sources:[ref]},
     {id:"demo_confirm",from:"notice",to:"reader",label:"returns a test notification",detail:"A fictional notification returns to the reader app.",sources:[ref]}
   ],
-  readings:{
-    structure:"Which components, services and relationships are currently represented?",
-    behavior:"What example sequence would these fictional components suggest?",
-    change:"Which displayed elements might be affected by a hypothetical change?",
-    evidence:"Which facts are independently checked, and which are merely illustrative?",
-    uncertainty:"What cannot be inferred from a diagram or static analysis alone?"
+  lensQuestions:{
+    causation:"What actually changes what? Which counterfactual test is still needed?",
+    meaning:"For which actor, relationship and situation does this example matter?",
+    association:"Which things are connected, and how strong is the available evidence?",
+    constitution:"Which parts and relationships make this illustrative whole possible?",
+    implication:"What follows from the stated premises, and what remains unproven?"
+  },
+  relationContracts:{
+    demo_request:{standing:"illustrative_only",establishment:"A fictional request is defined in the picture; no browser-to-API request is implemented.",effect:"Would deliver a request to the fictional API if realized."},
+    demo_lookup:{standing:"synthetic_code_checked",establishment:"The sample API imports the catalog helper; source analysis checks the import and a test executes the available/unavailable branches.",effect:"Selects the invented availability branch of requestBook."},
+    demo_reserve:{standing:"synthetic_code_checked",establishment:"The sample API calls the ledger helper for an available fictional book; a local test checks the returned in-memory record.",effect:"Creates a simulated loan result and mock notice, never a real loan."},
+    demo_fulfill:{standing:"illustrative_only",establishment:"The diagram declares a ledger-to-delivery link; the example code contains no delivery dispatch implementation.",effect:"Would enqueue a mock delivery step if separately implemented."},
+    demo_notify:{standing:"illustrative_only",establishment:"The diagram declares a sandbox-to-notice handoff; the sample code does not implement that handoff.",effect:"Would request a made-up message, not an email."},
+    demo_confirm:{standing:"illustrative_only",establishment:"The diagram declares a notice-to-reader return; no UI message transport is implemented.",effect:"Would display a simulated confirmation if realized."}
+  },
+  relationReadings:{
+    demo_request:{
+      causation:"No running reader-to-API call has been observed. To test causation, send a mock request and compare the API event trace with a no-request control.",
+      meaning:"For a fictional reader, the request represents an attempt to borrow a book. No real person or library is involved.",
+      association:"Reader App and Loan API are linked by this declared example relation only; no implemented frontend transport has been checked.",
+      constitution:"A request sender, API receiver and a transfer contract would be needed to constitute this interaction; the drawing supplies only a view.",
+      implication:"The diagram says a request could be submitted. It does not imply that the fictional API is reachable or that any loan exists."
+    },
+    demo_lookup:{
+      causation:"In the executable sample, the supplied book ID influences the availability branch. The test checks both a listed and an absent ID; it does not test a deployed service.",
+      meaning:"For an imaginary reader, an availability check distinguishes an available sample title from an unavailable one.",
+      association:"The sample API imports the catalog module. dependency-cruiser confirms that static import, and a local behavior test checks two inputs.",
+      constitution:"The API, in-memory catalog list and availability function together form this bounded sample lookup, without a real inventory backend.",
+      implication:"Given the two hard-coded sample IDs, an absent ID returns an unavailable result. This does not establish stock levels in any actual library."
+    },
+    demo_reserve:{
+      causation:"For a listed sample ID, the API invokes an in-memory ledger helper and gets a simulated result. A test demonstrates the output; nothing is persisted.",
+      meaning:"Within the invented borrower's scenario, recording a sample loan means the request can be treated as simulated rather than unavailable.",
+      association:"The API imports the ledger module, and the behavior test checks a simulated loan result. This is evidence for the local sample only.",
+      constitution:"The sample availability check, ledger helper and mock-notice function jointly produce the returned object.",
+      implication:"If the ID is listed, the sample returns status simulated. This does not imply a durable reservation, a delivery job or production correctness."
+    },
+    demo_fulfill:{
+      causation:"No dispatch code runs here, so no delivery effect has been established. A future test would compare ledger updates with and without a queued job.",
+      meaning:"For a fictional librarian, this would mean moving a loan record toward a hypothetical delivery step.",
+      association:"Loan Ledger and Delivery Sandbox are connected in the diagram, but the current sample source has no such import or call.",
+      constitution:"A ledger event, an enqueue operation and a sandbox consumer would all be required; only the intended relation is represented.",
+      implication:"Drawing a ledger-to-dispatch edge does not imply a queue exists, a job ran or a book was delivered."
+    },
+    demo_notify:{
+      causation:"There is no running dispatch-to-notice call. An observable effect would require a recorded sandbox invocation and controlled no-call comparison.",
+      meaning:"A pretend delivery operator might want a mock notice once a simulated step ends.",
+      association:"The dispatch and notice boxes are visually connected; no source-code dependency between them was found in this synthetic implementation.",
+      constitution:"A sandbox producer, notice consumer and message contract would be needed for this handoff to exist operationally.",
+      implication:"The proposed handoff does not prove the notice worker was invoked or any outbound message was sent."
+    },
+    demo_confirm:{
+      causation:"No notification reaches the Reader App in the running sample. A local UI delivery test would be needed to show such an effect.",
+      meaning:"For an imaginary reader, a confirmation would make a sample request visibly complete.",
+      association:"The diagram connects a mock Notice Worker back to Reader App; there is no verified frontend return channel.",
+      constitution:"A worker response, UI handler and message presentation would be needed; this is currently only a proposed view.",
+      implication:"A drawn return edge does not imply an actual UI notification, email or real borrower acknowledgment."
+    }
   }
 }
 const ident=/^[a-z][a-z0-9_]*$/
@@ -51,7 +103,27 @@ export function validateFixture(data) {
    if(triples.has(triple))errors.push("ambiguous_visual_relation:"+r.id); triples.add(triple);
    for(const s of r.sources||[])if(s.kind!=="synthetic"||s.path!=="src/fixture.mjs"||s.revision!==data.source.revision)errors.push("non_public_source_ref:"+r.id);
  }
- for(const l of ["structure","behavior","change","evidence","uncertainty"])if(!data.readings?.[l])errors.push("missing_reading:"+l);
+ for(const l of ["causation","meaning","association","constitution","implication"]){
+   if(!data.lensQuestions?.[l])errors.push("missing_lens_question:"+l);
+ }
+ for(const r of data.relations||[]){
+   const contract=data.relationContracts?.[r.id];
+   if(!contract?.establishment||!contract.effect||
+      !["illustrative_only","synthetic_code_checked"].includes(contract.standing))
+     errors.push("missing_or_invalid_relation_contract:"+r.id);
+   const readings=data.relationReadings?.[r.id];
+   if(!readings)errors.push("missing_relation_readings:"+r.id);
+   else for(const l of ["causation","meaning","association","constitution","implication"])
+     if(typeof readings[l]!=="string"||readings[l].length<20)
+       errors.push("missing_lens_reading:"+r.id+":"+l);
+ }
  return errors;
 }
 export function selectItem(id){return fixture.nodes.find(n=>n.id===id)||fixture.relations.find(r=>r.id===id)||null}
+
+export function readRelationLens(id,lens,data=fixture){
+ if(!["causation","meaning","association","constitution","implication"].includes(lens))
+   throw Error("unrecognized_lens:"+lens);
+ const reading=data.relationReadings?.[id]?.[lens];
+ return typeof reading==="string"&&reading.trim()?reading:null;
+}
