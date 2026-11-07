@@ -1,6 +1,7 @@
-// Experimental, read-only projection of Worang #1403's case.mjs.
-// Model declarations are *not* a new architecture authority.
-// Case identities are verified against the DSL by src/bridge.test.mjs.
+// GENERATED FILE — do not edit manually.
+// Input: ../case.mjs (dongxi-heji/worang @ a6b0b93be046f2aeb20e33365fec889e93ae6b2b)
+// Projection only: not a Worang design authority or evidence of runtime correctness.
+// Regenerate: npm run generate:model
 specification {
   element component
 }
@@ -23,7 +24,7 @@ model {
 
 views {
   view index {
-    title 'Worang #1403 · 结构与责任'
+    title 'Worang #1403 · Work 与 Claim 的关系 · 结构与责任'
     include *
   }
 }
