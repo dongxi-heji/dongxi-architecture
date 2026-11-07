@@ -47,3 +47,18 @@ test('real visual edge click resolves an invented relation and remains stable ac
  await expect(page.getByTestId('reading')).not.toContainText('Select a relation')
  await expect(page.getByTestId('source-kind')).toContainText('original_synthetic')
 })
+
+
+test('public demo does not fetch code or assets from an external origin',async({page})=>{
+ const external:string[]=[]
+ page.on('request',request=>{
+  const url=request.url()
+  if(/^https?:\/\//.test(url) && !url.startsWith('http://127.0.0.1:5173/'))external.push(url)
+ })
+ await page.goto('/')
+ await expect(page.getByTestId('source-kind')).toContainText('original_synthetic')
+ await expect(page.locator('.react-flow__node').first()).toBeVisible({timeout:30000})
+ await page.getByRole('button',{name:'Association',exact:true}).click()
+ await expect(page.getByTestId('lens-question')).toContainText('Which things')
+ expect(external).toEqual([])
+})
