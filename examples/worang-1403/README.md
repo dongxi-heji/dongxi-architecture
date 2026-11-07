@@ -51,4 +51,17 @@ node examples/worang-1403/export-sgir.mjs
 node --test examples/worang-1403/*.test.mjs src/adapters/*.test.mjs
 ~~~
 
-**仍未完成：** 浏览器现场验收、从 Worang canonical IR 反向读取的完整链路、OpenFlowKit / LikeC4 接入、分析器本地重复执行的 UI 接口、#1403 生产 canary。当前工具读数是一次被固定并可追溯的实际分析快照，不是页面加载时的新鲜实时结果。
+**截至第二轮时尚未完成：** 浏览器现场验收、从 Worang canonical IR 反向读取的完整链路、OpenFlowKit / LikeC4 接入、分析器本地重复执行的 UI 接口、#1403 生产 canary。当前工具读数是一次被固定并可追溯的实际分析快照，不是页面加载时的新鲜实时结果。下方第三轮记录更新了 LikeC4 的实际验收状态。
+
+## 第三轮进展：真实嵌入 LikeC4 并在 Chromium 验证交互
+
+独立工程试验在 [`likec4-spike/`](likec4-spike/)；**原本的零依赖 HTML/SVG 原型继续保留**。新入口使用 React 19.3.1、Vite 8.3.6、TypeScript 5.8.3 和 LikeC4 1.60.0，Vite 插件的可选 AI 自动发现显式关闭。
+
+从 `likec4-spike/` 执行 `npm install`、`npm test`、`npm run build`、`npm run dev` 即可本地验证。CI 在 Node 22 与 Node 26 进行安装、类型检查及生产构建；在 Node 22 上额外使用 Playwright Chromium 执行真实节点点击、五镜切换和工具读数回显测试。
+
+- [通过的完整 CI 证据](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42365209358)：三个作业均为 success，包含 Chromium 实际节点交互。
+- [React LikeC4 试验的 README](likec4-spike/README.md)：说明源身份解析、合并边失败封闭和当前有损投影的界限。
+- 已处理实际兼容问题：LikeC4 1.60.0 要求 React 19.3.x、Vite 8.3.x 和匹配的 Vite React 插件。未通过 `--force`／忽略 peer dependency 继续安装。
+- 真实浏览器测试最初点击标题文字层被节点容器拦截；修正为点击真实 React Flow 节点容器后通过。不能把最初测试定位器失败误读为 LikeC4 核心交互失败。
+
+**剩余验收／选型约束：** 当前 Chromium 测试证明节点点击、跨镜选中、真实分析读数回显；**尚无端到端浏览器关系连线点击测试**，虽然事件适配与合并边拒绝的单元测试已通过。当前 LikeC4 试验生产构建主 JS 包约 **2,618.34 KB（gzip 762.09 KB）**，有 chunk size 警告。发布前需要分包／懒加载与真实性能、许可证、包锁和可持续更新策略检查，才能最终冻结产品栈。现阶段 `model.c4` 仍是案例投影，而不是自动从 Worang canonical IR 生成。
