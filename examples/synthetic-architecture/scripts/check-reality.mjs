@@ -13,6 +13,7 @@ import {assessRealityLink} from "../src/reality-link.mjs";
 import {guardAssessmentForWindow} from "./source-window.mjs";
 import {analyzeSyntheticSource} from "./check-analysis.mjs";
 import {createFrozenSyntheticScope,gitBlobDigest,guardAssessedFrozenSource} from "./frozen-source.mjs";
+import {verifySyntheticBehaviorReport} from "./verify-test-report.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const evidenceOut=join(root,"public","reality-readout.json");
 
@@ -48,8 +49,8 @@ function runFrozenBehavior(snapshotRoot){
     resolve(snapshotRoot,"src/sample-domain/behavior.test.mjs")
    ],{cwd:snapshotRoot,encoding:"utf8",timeout:90000,
       maxBuffer:3*1024*1024,env});
-  if(!output.trim())throw Error("missing_behavior_tool_report");
-  return {status:"passed",evidenceRef:
+  const testSummary=verifySyntheticBehaviorReport(output);
+  return {status:"passed",testSummary,evidenceRef:
     "sha256:"+createHash("sha256").update(output).digest("hex")};
  }catch{
   return {status:"failed",evidenceRef:"tool_execution_failed:node:test"};
@@ -93,7 +94,8 @@ export function replayPublicReality() {
      command:"pinned local depcruise of verified staged synthetic source",
      status:staticResult.status,evidenceRef:staticResult.evidenceRef},
     {method:"node:test",command:"node --test on staged synthetic behavior fixtures",
-     status:behaviorResult.status,evidenceRef:behaviorResult.evidenceRef}
+     status:behaviorResult.status,evidenceRef:behaviorResult.evidenceRef,
+     testSummary:behaviorResult.testSummary??null}
    ],
    assessments:{}
   };
