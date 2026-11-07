@@ -95,7 +95,8 @@ export function assessRealityLink(link,observation){
   const entries=checks.filter(c=>c?.id===criterion.id);
   const c=entries.length===1?entries[0]:null;
   const valid=c&&c.method===criterion.method&&CHECK_RESULT_VALUES.includes(c.status)&&
-    c.command&&typeof c.command==="string"&&
+    typeof c.command==="string"&&c.command.trim()&&
+    (c.status==="unknown"||(typeof c.evidenceRef==="string"&&c.evidenceRef.trim()))&&
     c.resourceIds?.length===criterion.resourceIds.length&&
     criterion.resourceIds.every(x=>c.resourceIds.includes(x));
   facts.checkReadings.push({
