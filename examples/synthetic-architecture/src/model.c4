@@ -1,0 +1,28 @@
+// GENERATED — derived from src/fixture.mjs (invented example only).
+// Regenerate with npm run generate:model. Not a factual architecture authority.
+specification {
+  element component
+}
+
+model {
+  reader = component 'Reader App'
+  api = component 'Loan API'
+  catalog = component 'Catalog Service'
+  ledger = component 'Loan Ledger'
+  dispatch = component 'Delivery Sandbox'
+  notice = component 'Notice Worker'
+
+  reader -> api 'submits a sample request'
+  api -> catalog 'checks sample availability'
+  api -> ledger 'records an imaginary reservation'
+  ledger -> dispatch 'provides a sandbox task'
+  dispatch -> notice 'requests a mock notice'
+  notice -> reader 'returns a test notification'
+}
+
+views {
+  view index {
+    title 'Fictional Neighborhood Library'
+    include *
+  }
+}
