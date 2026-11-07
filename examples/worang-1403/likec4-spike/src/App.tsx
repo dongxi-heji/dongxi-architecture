@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import { ReactLikeC4 } from 'likec4:react'
+import { lazy, Suspense, useState } from 'react'
 import { caseData, findItem, lensReading } from '../../case.mjs'
 import { analyzerReadout, toolReadingFor } from '../../analysis-readout.mjs'
-import { resolveLikeC4Node, resolveLikeC4Edge } from './bridge.mjs'
+const LikeC4Canvas = lazy(() => import('./LikeC4Canvas').then(m => ({ default: m.LikeC4Canvas })))
 
 const lenses = [
   { id: 'causation', name: '因果', question: '什么真实作用改变了什么？' },
@@ -69,20 +68,9 @@ export function App() {
           <span className="readonly">● 只读投影</span>
         </div>
         <div className="likec4-view" data-testid="likec4-view">
-          <ReactLikeC4
-            viewId="index"
-            background="dots"
-            pannable
-            zoomable
-            fitView
-            keepAspectRatio={false}
-            enableElementDetails={false}
-            enableRelationshipDetails={false}
-            enableRelationshipBrowser={false}
-            enableFocusMode={false}
-            onNodeClick={(node) => accept(resolveLikeC4Node(node, caseData) as Resolution)}
-            onEdgeClick={(edge) => accept(resolveLikeC4Edge(edge, caseData) as Resolution)}
-          />
+          <Suspense fallback={<p className="loading-diagram" role="status">正在载入可交互架构视图…右侧的语义、来源与工具读数可先独立阅读。</p>}>
+            <LikeC4Canvas onSelection={accept} />
+          </Suspense>
         </div>
         {unbound && <p className="warning" role="status">{unbound}。保留上一个已确认对象，不提升事实强度。</p>}
         <div className="canvas-foot">
