@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "node --test src/bridge.test.mjs",
-    "test:e2e": "playwright test"
+    "test": "npm run check:model && node --test src/*.test.mjs",
+    "test:e2e": "playwright test",
+    "generate:model": "node src/generate-model.mjs --write",
+    "check:model": "node src/generate-model.mjs --check"
   },
   "dependencies": {
     "react": "19.3.1",
