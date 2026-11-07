@@ -10,6 +10,7 @@ type ScopedAssessment = {
  result:string;reason:string;sourceStanding:string;scopeEquivalence:string;
  sameRevision:boolean;authorityUnchanged:boolean;changedScope:string[];
  unknownScope:string[];boundary:string;checkReadings:Array<{criterionId:string;status:string;method:string;evidenceRef:string|null}>;
+ sourceWindow?:{status:string;phases:number;unstableIds:string[];unknownIds:string[];limitation:string};
 }
 type RealityReadout = {
  contract:string;sourceKind:string;sourceRevision:string;mode:string;
@@ -176,6 +177,14 @@ export function App() {
        ? <div data-testid="reality-assessment">
            <p><strong data-testid="reality-status">{scopedReading.result}</strong> — {scopedReading.reason}</p>
            <p>Content comparison: {scopedReading.scopeEquivalence}. Original relation standing: {scopedReading.sourceStanding}.</p>
+           <p data-testid="source-check-window">
+             Check-window observation: {scopedReading.sourceWindow?.status??'not reported'}
+             {scopedReading.sourceWindow?.status==='equal-at-observation-points'
+               ? ' (not an atomic snapshot)'
+               :scopedReading.sourceWindow
+                 ? '. Changed or missing observations block fresh support.'
+                 :'. No stability window can be verified.'}
+           </p>
            {scopedReading.checkReadings.map(check=>
              <p key={check.criterionId}>{check.criterionId}: <strong>{check.status}</strong> via {check.method}</p>)}
            <p className="hint">Source revision: {reality?.sourceRevision}. The reading was last captured at {recheckedAt?'the explicitly requested recheck':'build / dev-server start'}; it is not continuously monitored.</p>
