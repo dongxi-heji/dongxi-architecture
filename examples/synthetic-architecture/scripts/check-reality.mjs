@@ -9,6 +9,7 @@ import {fileURLToPath} from "node:url";
 import {dirname,join,resolve} from "node:path";
 import {publicRealityLinks,PUBLIC_SOURCE_FILES} from "../src/reality-links.mjs";
 import {assessRealityLink} from "../src/reality-link.mjs";
+import {guardAssessmentForWindow} from "./source-window.mjs";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const evidenceOut=join(root,"public","reality-readout.json");
 
@@ -54,6 +55,7 @@ export function replayPublicReality() {
     });
     return "sha256:"+createHash("sha256").update(normalized).digest("hex");
    });
+ const afterStatic=currentScopeFingerprints();
  const behaviorResult=execute("node:test",process.execPath,
    ["--test","--test-reporter=tap","src/sample-domain/behavior.test.mjs"],raw=>{
     // Node 22 and Node 26 use different reporter output conventions.
@@ -63,12 +65,19 @@ export function replayPublicReality() {
     if(typeof observed.behavior_test!=="string")throw Error("test_source_unobserved");
     return observed.behavior_test;
    });
+ const afterBehavior=currentScopeFingerprints();
+ const observedPhases=[observed,afterStatic,afterBehavior];
  const metadata={
   contract:"dongxi.reality-replay/v0",
   sourceKind:"original_synthetic",
   sourceRevision:"library_demo_v1",
   mode:"locally_executed_at_build_or_dev_start_not_continuous_runtime",
-  fingerprints:observed,
+  fingerprints:afterBehavior,
+  sourceObservation:{
+   kind:"sampled_before_between_after_tools",
+   phaseCount:observedPhases.length,
+   limit:"Not an atomic source snapshot; intervening changes restored between samples cannot be excluded."
+  },
   toolRuns:[
    {method:"dependency-cruiser@18.7.2",command:"node scripts/check-analysis.mjs",
     status:staticResult.status,evidenceRef:staticResult.evidenceRef},
@@ -83,9 +92,10 @@ export function replayPublicReality() {
    return {id:criterion.id,method:criterion.method,command:tool.command,
      status:tool.status,resourceIds:[...criterion.resourceIds],evidenceRef:tool.evidenceRef};
   });
-  metadata.assessments[id]=assessRealityLink(link,{
-   sourceId:link.source.id,revision:link.source.revision,fingerprints:observed,checks
+  const assessed=assessRealityLink(link,{
+   sourceId:link.source.id,revision:link.source.revision,fingerprints:afterBehavior,checks
   });
+  metadata.assessments[id]=guardAssessmentForWindow(link,assessed,observedPhases);
  }
  return metadata;
 }
