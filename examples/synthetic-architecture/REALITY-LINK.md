@@ -77,3 +77,14 @@ The bounded check runner now fingerprints the declared synthetic source resource
 A changed observed fingerprint, or a missing required fingerprint at any sampled boundary, prevents a *new* `supported-in-scope` conclusion. A source that is already `stale` relative to its bound snapshot retains that stronger observed fact. An unrelated changed resource outside a relation's scope does not invalidate its evidence.
 
 **Limit:** three samples are not an atomic filesystem snapshot. A change that happens and is restored entirely between samples may escape detection. For stronger assurances, a later private adapter should analyze an immutable content-addressed snapshot or validated isolated worktree. This public integration is a fail-closed improvement, not a claim of full transactional source isolation.
+
+
+## Git-object-backed frozen execution inputs
+
+The public fixture now stages each of the **five explicitly allowlisted synthetic source/test files** from its pinned, content-addressed Git blob object (not from whatever happens to be in the mutable working directory). Every byte sequence is re-hashed against its declared blob ID and copied into a temporary, read-only source tree. Both professional checks execute on this staged tree: dependency-cruiser analyzes its four sample modules, and Node's test runner executes its staged behavior test and imported modules.
+
+The staged inputs are checked before execution, between the two tools, and after execution. If staged integrity cannot be established, a newly passing result cannot become fresh support. The temporary tree is removed in a `finally` block, without writing to the original source checkout. A browser-triggered recheck uses the very same fixed replay runner.
+
+Source equivalence has **two distinct meanings**: (a) the tools actually read pinned Git-blob source bytes, and (b) the currently observed worktree matches the pinned bytes for that relation's declared scope. A successful run on the pinned source does not validate an edited worktree if its content differs. The existing three-phase worktree readings still detect mismatches and prevent the old result from being promoted. The staged copies are verified, but the host operating system and its permissions do **not** constitute a secure adversarial sandbox, and the overall repository is not proven unchanged.
+
+This is a technically stronger source-consistency claim than merely sampling mutable worktree bytes while tools run. It is still a **synthetic** fixture, not a private user-code runner; do not generalize this staging design into permission to copy or display a private project's sources.
