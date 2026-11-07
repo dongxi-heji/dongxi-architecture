@@ -2,7 +2,7 @@
 
 这是 [dongxi-architecture #3](https://github.com/dongxi-heji/dongxi-architecture/issues/3) 的**独立 React/Vite 技术栈验收切片**，不是全面迁移现有无依赖原型，也不改变 Worang 语义权威。
 
-**栈**：TypeScript 5.8.3 / React 19.2.0 / Vite 6.4.5 / LikeC4 1.60.0；当前包均明确记录版本。模型仅为 [../case.mjs](../case.mjs) 的**只读、有损投影**。
+**栈**：TypeScript 5.8.3 / React 19.3.1 / Vite 8.3.6 / LikeC4 1.60.0；版本按 LikeC4 实际 peerDependencies 和 Vite 主版本要求锁定；Vite 插件的 AI 自动探测在本试验中显式关闭。模型仅为 [../case.mjs](../case.mjs) 的**只读、有损投影**。
 
 ## 运行
 
