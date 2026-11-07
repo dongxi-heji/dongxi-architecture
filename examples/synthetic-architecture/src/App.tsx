@@ -16,6 +16,7 @@ type RealityReadout = {
  assessments:Record<string,ScopedAssessment>;
  toolRuns:Array<{method:string;status:string;command:string;evidenceRef:string|null}>;
 }
+type PublicSourceChoice=Readonly<{id:string;path:string;digest:string;kind:string}>
 type Lens='causation'|'meaning'|'association'|'constitution'|'implication'
 const modes:[Lens,string][]=[
  ['causation','Causation'],['meaning','Meaning'],['association','Association'],
@@ -47,7 +48,7 @@ export function App() {
  const contract=isRelation?readRelationContract(selected):null
  const lensText=isRelation?readRelationLens(selected,reading):null
  const scopedReading=reality?.assessments?.[selected]??null
- const sourceChoices=listPublicSources(selected)
+ const sourceChoices:PublicSourceChoice[]=listPublicSources(selected)
  const chosenSource=sourceChoices.find(source=>source.id===sourceSelection)??null
  async function recheckSource() {
   if(recheckPhase==='checking')return
