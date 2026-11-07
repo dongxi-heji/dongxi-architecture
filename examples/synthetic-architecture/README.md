@@ -60,3 +60,14 @@ The outcome is interpreted as **supported-in-scope**, **stale**, **open**, **con
 The entry page now shows the assessed status only for selected relations with real source bindings. The generated `public/reality-readout.json` is ignored by Git and recreated by `npm run build` / `npm run dev`. Its status is captured at **build/dev startup**; edit source code and rerun `npm run reality:show` or restart to refresh. The tests include unchanged, changed, missing, wrong identity, decisive vs nondecisive failures, and source standing that cannot be promoted.
 
 [Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42381335477) validated **38 unit tests, 3 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 238 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
+
+
+## Interactive source inspection and explicit recheck
+
+In the **local development** UI, select one of the two source-backed invented relations. The source locator lists only hardcoded, independently authored files under `src/sample-domain/`. Click `ledger`, `api`, or another permitted source ID to inspect the **bundled snapshot** of that fictional module. The inspector cannot read an arbitrary browser-supplied path or a private checkout. Bundled source is not a live worktree read.
+
+The `Re-check source and evidence` button performs a fresh **fixed-action** local check against the fictional checkout. It calls `POST /api/reality/recheck` on the same Vite origin and receives the result of the allowlisted analyzer and Node behavior tests. The development middleware accepts only loopback `127.0.0.1`, a matching Origin, an empty POST body, one active check at a time, and no arbitrary file or command names. It has no cloud mode, public listener or generic command runner. Production builds do **not** include the endpoint or display the button.
+
+The previous `supported-in-scope` result is cleared when the check starts. If the new tool run fails, the display is Open; the old support is not reused. The selected relation and lens stay stable. The initial bootstrap fetch is aborted when the manual check begins, so it cannot overwrite the fresh result.
+
+These are **synthetic integration results only**. The actual private-source adapter has not yet been connected to this browser action; no private file, path or report was introduced into the public repository.
