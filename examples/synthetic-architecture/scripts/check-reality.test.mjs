@@ -27,6 +27,7 @@ test("a real analyzer + behavior subprocess creates only limited supported readi
  assert.equal(report.assessments.demo_lookup.sourceWindow.status,"equal-at-observation-points");
  assert.equal(report.assessments.demo_reserve.sourceWindow.status,"equal-at-observation-points");
  assert(report.toolRuns.every(x=>x.status==="passed"&&x.evidenceRef),JSON.stringify(report.toolRuns));
+ assert.deepEqual(report.toolRuns[1].testSummary,{tests:2,passed:2,failed:0,skipped:0});
  assert.equal(report.assessments.demo_lookup.result,"supported-in-scope");
  assert.equal(report.assessments.demo_reserve.result,"supported-in-scope");
  assert(report.assessments.demo_reserve.authorityUnchanged);
