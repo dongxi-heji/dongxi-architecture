@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 import {PUBLIC_SOURCE_FILES,publicRealityLinks} from "../src/reality-links.mjs";
 import {assessRealityLink} from "../src/reality-link.mjs";
 import {currentScopeFingerprints,replayPublicReality} from "./check-reality.mjs";
@@ -29,7 +31,11 @@ test("replayed evidence is invalidated by changed and missing content without mo
    return {id:c.id,method:c.method,resourceIds:c.resourceIds,command:run.command,
     status:run.status,evidenceRef:run.evidenceRef};
   })};
- o.fingerprints.ledger="git-blob-sha1:"+"f".repeat(40);
+ const original=readFileSync(new URL("../src/sample-domain/ledger.mjs",import.meta.url));
+ const altered=Buffer.concat([original,Buffer.from("\n// in-memory change, not written to repository\n")]);
+ const actualChangedDigest="git-blob-sha1:"+createHash("sha1")
+   .update(Buffer.from("blob "+altered.length+"\0")).update(altered).digest("hex");
+ o.fingerprints.ledger=actualChangedDigest;
  const changed=assessRealityLink(link,o);
  assert.equal(changed.result,"stale");
  assert.deepEqual(changed.changedScope,["ledger"]);
