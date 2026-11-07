@@ -1,0 +1,33 @@
+{
+  "name": "@dongxi-architecture/synthetic-architecture",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run reality:write && vite --host 127.0.0.1",
+    "check:model": "node scripts/generate-model.mjs --check",
+    "generate:model": "node scripts/generate-model.mjs --write",
+    "analyze": "node scripts/check-analysis.mjs",
+    "test": "npm run check:model && node --test src/*.test.mjs src/sample-domain/*.test.mjs scripts/*.test.mjs",
+    "build": "npm run check:licenses && npm run analyze && npm test && npm run reality:write && tsc --noEmit && vite build && node scripts/check-bundle.mjs",
+    "test:e2e": "playwright test",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "reality:check": "node scripts/check-reality.mjs --check",
+    "reality:show": "node scripts/check-reality.mjs --show",
+    "reality:write": "node scripts/check-reality.mjs --write"
+  },
+  "dependencies": {
+    "likec4": "1.60.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.6",
+    "typescript": "5.8.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@playwright/test": "1.65.0",
+    "dependency-cruiser": "18.7.2"
+  }
+}

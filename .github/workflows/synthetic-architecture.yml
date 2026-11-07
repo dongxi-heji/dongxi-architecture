@@ -1,0 +1,45 @@
+name: Synthetic architecture integration
+on:
+  push:
+    paths:
+      - "examples/synthetic-architecture/**"
+      - ".github/workflows/synthetic-architecture.yml"
+  pull_request:
+    paths:
+      - "examples/synthetic-architecture/**"
+      - ".github/workflows/synthetic-architecture.yml"
+jobs:
+  synthetic:
+    name: Fixture, LikeC4 and static analyzer (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "26"]
+    defaults:
+      run:
+        working-directory: examples/synthetic-architecture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install pinned dependencies
+        run: npm ci --no-audit --no-fund --registry=https://registry.npmjs.org
+      - name: Analyze fictional code, verify model and compile UI
+        run: npm run build
+      - name: Install Chromium
+        if: matrix.node == '22'
+        run: npx playwright install --with-deps chromium
+      - name: Verify real diagram selection in the browser
+        if: matrix.node == '22'
+        run: npm run test:e2e
+      - name: Upload failing browser trace
+        if: failure() && matrix.node == '22'
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-architecture-browser-failure
+          path: examples/synthetic-architecture/test-results/
+          if-no-files-found: ignore
