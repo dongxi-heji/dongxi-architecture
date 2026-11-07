@@ -25,6 +25,8 @@ export function App() {
  const [warning,setWarning]=useState('')
  const [reality,setReality]=useState<RealityReadout|null>(null)
  const [realityError,setRealityError]=useState<string|null>(null)
+ const [recheckPhase,setRecheckPhase]=useState<'idle'|'checking'|'rechecked'|'open'>('idle')
+ const [recheckedAt,setRecheckedAt]=useState<string|null>(null)
  useEffect(()=>{
   let mounted=true
   fetch('/reality-readout.json',{cache:'no-store'})
@@ -42,6 +44,31 @@ export function App() {
  const contract=isRelation?readRelationContract(selected):null
  const lensText=isRelation?readRelationLens(selected,reading):null
  const scopedReading=reality?.assessments?.[selected]??null
+ async function recheckSource() {
+  if(recheckPhase==='checking')return
+  setRecheckPhase('checking')
+  // Never present cached success as the current result while a new test runs.
+  setReality(null)
+  setRealityError(null)
+  setRecheckedAt(null)
+  try{
+    const response=await fetch('/api/reality/recheck',{method:'POST',cache:'no-store'})
+    if(!response.ok)throw Error('local_recheck_unavailable')
+    const data=await response.json()
+    if(data.contract!=='dongxi.reality-refresh/v0'||data.status!=='rechecked'||
+       data.readout?.contract!=='dongxi.reality-replay/v0'||
+       data.readout?.sourceKind!=='original_synthetic'||
+       typeof data.recheckedAt!=='string')
+      throw Error('unbound_recheck_response')
+    setReality(data.readout as RealityReadout)
+    setRecheckedAt(data.recheckedAt)
+    setRecheckPhase('rechecked')
+  }catch{
+    setReality(null)
+    setRealityError('local_reanalysis_unavailable; previous evidence cleared')
+    setRecheckPhase('open')
+  }
+ }
  function accept(result:Selection){
   if(result.kind==='resolved'){setSelected(result.id);setWarning('')}
   else setWarning('This visual shape does not uniquely identify a source relation: '+result.reason)
@@ -96,13 +123,28 @@ export function App() {
     </section>
     <section className="card" aria-label="Source-bound verification">
      <h2>Reality connection · bounded evidence</h2>
+     {import.meta.env.DEV&&<div className="recheck-controls">
+       <button type="button" data-testid="recheck-source" disabled={recheckPhase==='checking'}
+         onClick={recheckSource}>
+         {recheckPhase==='checking'?'Checking local source…':'Re-check source and evidence'}
+       </button>
+       <p role="status" data-testid="recheck-phase">
+         {recheckPhase==='checking'
+           ? 'Previous result cleared. Running pinned local tools for this synthetic checkout.'
+           :recheckPhase==='rechecked'
+             ? 'Freshly rechecked at '+recheckedAt+'. Original relation identity and standing retained.'
+             :recheckPhase==='open'
+               ? 'Open: fresh check unavailable. Previous support is not reused.'
+               :'Use this action to rerun the bounded source checks without changing the selected relation.'}
+       </p>
+     </div>}
      {scopedReading
        ? <div data-testid="reality-assessment">
            <p><strong data-testid="reality-status">{scopedReading.result}</strong> — {scopedReading.reason}</p>
            <p>Content comparison: {scopedReading.scopeEquivalence}. Original relation standing: {scopedReading.sourceStanding}.</p>
            {scopedReading.checkReadings.map(check=>
              <p key={check.criterionId}>{check.criterionId}: <strong>{check.status}</strong> via {check.method}</p>)}
-           <p className="hint">Source revision: {reality?.sourceRevision}. The reading is captured by tools at build or dev-server start, not continuously recomputed in the browser.</p>
+           <p className="hint">Source revision: {reality?.sourceRevision}. The reading was last captured at {recheckedAt?'the explicitly requested recheck':'build / dev-server start'}; it is not continuously monitored.</p>
            <p className="alert">{scopedReading.boundary}</p>
          </div>
        : <p data-testid="reality-assessment">{realityError
