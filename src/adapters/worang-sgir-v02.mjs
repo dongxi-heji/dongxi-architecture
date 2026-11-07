@@ -34,7 +34,7 @@ function sourceRef(url, snapshot) {
     return {path: decodeURIComponent(path), ...(anchor?{anchor}:{}),sha:snapshot.commit};
   }
   const issuePrefix = "https://github.com/" + snapshot.repository + "/issues/";
-  if (url.startsWith(issuePrefix) && /^\/issues\/\d+$/.test(url.slice(issuePrefix.length-7))) {
+  if (url.startsWith(issuePrefix) && /^\d+$/.test(url.slice(issuePrefix.length))) {
     return {path:url,note:"独立 GitHub Issue URL；其当前内容不受 Git 快照固定"};
   }
   throw new Error("unbound_or_unpinned_source:" + url);
