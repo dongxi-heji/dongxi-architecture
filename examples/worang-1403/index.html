@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Architecture · #1403 关系导航原型</title>
+<style>
+:root{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#182337;background:#f6f7fa}
+*{box-sizing:border-box}body{margin:0}header{background:#fff;border-bottom:1px solid #dce2e9;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;margin:0 0 4px}p{line-height:1.55;margin:5px 0}.muted{color:#526276;font-size:13px}
+main{max-width:1480px;padding:16px;margin:auto;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:16px}
+.panel{background:#fff;border:1px solid #dce2e9;border-radius:15px;padding:18px;min-width:0}
+h2{font-size:16px;margin:0 0 12px}h3{font-size:14px;margin:18px 0 6px}
+button{border:1px solid #becbdb;color:#26364f;background:white;border-radius:8px;padding:8px 11px;cursor:pointer;font:inherit;font-size:13px}
+button[aria-pressed=true]{background:#1e4d86;color:#fff;border-color:#1e4d86}button:focus-visible,a:focus-visible{outline:3px solid #ed9818;outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+#diagram{width:100%;min-height:340px;background:#f8fafd;border:1px solid #e2e7ed;border-radius:10px;overflow:auto}
+svg{width:100%;height:auto;min-width:640px}.edge{stroke:#778ba6;stroke-width:2.2;fill:none;cursor:pointer}.edge.selected{stroke:#bd6417;stroke-width:4}.edgeHit{stroke:transparent;stroke-width:17;cursor:pointer}
+.node{cursor:pointer}.node rect{fill:white;stroke:#9cadc1;stroke-width:1.6}.node.selected rect{stroke:#bd6417;stroke-width:3;fill:#fff5e9}
+.node text{font-size:15px;fill:#1b314e;pointer-events:none}.nsub{font-size:11px!important;fill:#597089!important}
+.edgeLabel{font-size:11px;fill:#40536c;paint-order:stroke;stroke:#f8fafd;stroke-width:5px;stroke-linejoin:round;pointer-events:none}
+.small{font-size:12px}.pill{display:inline-block;border-radius:12px;padding:3px 8px;background:#eef2f7;font-size:12px;color:#41566e}
+.warn{background:#fff0de;color:#8b4a13}.ok{background:#e8f5ee;color:#256243}
+#sources a{display:block;margin:6px 0;overflow-wrap:anywhere;font-size:12px}
+#assessment{border-left:3px solid #d39b4e;padding:10px;background:#fff9f2;font-size:13px}
+footer{margin:0 auto;max-width:1480px;padding:2px 20px 28px;color:#526276;font-size:12px}
+@media(max-width:900px){main{grid-template-columns:1fr}header{padding:15px}main{padding:10px}}
+</style>
+</head>
+<body>
+<header><div><h1>东西 Architecture · #1403 关系导航</h1><p class="muted">只读研究原型 · 有源事实／设计目标／尚未验证的现实分开呈现</p></div><a href="https://github.com/dongxi-heji/dongxi-architecture/issues/3">工程 Issue #3</a></header>
+<main>
+<section class="panel">
+<h2>当前系统的局部关系</h2>
+<div class="toolbar" id="views"></div>
+<p id="view-description" class="muted"></p>
+<div id="diagram" role="group" aria-label="软件关系示意，点选节点或关系以查看来源"></div>
+<p class="muted">选择图中的节点或连线。换视图、换镜头不会改写对象身份、Claim 或源事实。</p>
+<h3>当前关注的关系</h3>
+<p id="relation-summary"></p>
+<h3>图例</h3>
+<p class="muted"><span class="pill ok">源码中已有实现</span> <span class="pill">局部测试覆盖</span> <span class="pill warn">设计目标／尚未完成</span></p>
+</section>
+<aside class="panel">
+<h2>当前对象与来源</h2>
+<div id="item-name"></div>
+<p id="item-detail" class="small"></p>
+<p id="standing"></p>
+<h3>五镜 · 读取关系，而非五种关系类型</h3>
+<div class="toolbar" id="lenses"></div>
+<p class="small" id="lens-question"></p>
+<p class="small" id="lens-reading"></p>
+<h3>可检查的来源</h3>
+<div id="sources"></div>
+<h3>Claim 与证据边界</h3>
+<div id="assessment"></div>
+</aside>
+</main>
+<footer>资料版本：<span id="snapshot"></span>。这是从版本化源码和 Issue 整理的局部表示，未进行本次 M5 生产运行验收；图像本身不建立设计承诺。</footer>
+<script type="module">
+import {caseData,validateCase,findItem,lensReading} from "./case.mjs";
+const errors=validateCase(caseData);
+if(errors.length){document.getElementById("diagram").textContent="数据校验失败："+errors.join("、");throw Error(errors.join(","));}
+const $=x=>document.getElementById(x);
+const viewOrder=["structure","behavior"];
+const lensNames={causation:"因果",meaning:"意义",association:"关联",constitution:"构成",implication:"蕴含"};
+let view="structure",lens="association",selected="r-ownership";
+$("snapshot").textContent=caseData.snapshot.repository+" @ "+caseData.snapshot.commit.slice(0,12);
+function button(group,label,pressed,cb){
+ const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-pressed",String(pressed));b.addEventListener("click",cb);group.append(b);
+}
+function el(tag,attrs={},parent){
+ const x=document.createElementNS("http://www.w3.org/2000/svg",tag);
+ for(const [k,v] of Object.entries(attrs))x.setAttribute(k,String(v));
+ if(parent)parent.append(x);return x;
+}
+function coords(){
+ return view==="structure"
+ ?{project:[90,88],controller:[340,88],hive:[595,88],claim:[595,245],work:[340,245],chat:[90,245]}
+ :{project:[90,88],controller:[340,88],hive:[595,88],claim:[595,245],work:[340,245],chat:[90,245]};
+}
+function draw(){
+ $("diagram").replaceChildren();
+ const svg=el("svg",{viewBox:"0 0 790 370",role:"img","aria-label":caseData.views[view].title},$("diagram"));
+ const positions=coords(),names=new Map(caseData.nodes.map(n=>[n.id,n]));
+ const relations=caseData.views[view].relationIds.map(findItem);
+ const drawn=new Map();
+ for(const r of relations){
+  const a=positions[r.from],b=positions[r.to]; if(!a||!b)continue;
+  const ax=a[0]+70,ay=a[1]+26,bx=b[0]+70,by=b[1]+26;
+  const key=r.from+"-"+r.to;
+  const num=drawn.get(key)||0;drawn.set(key,num+1);
+  const path=el("line",{x1:ax,y1:ay,x2:bx,y2:by,class:"edge"+(selected===r.id?" selected":""),stroke:undefined},svg);
+  // Transparent hit target makes relationships easy to select.
+  const hit=el("line",{x1:ax,y1:ay,x2:bx,y2:by,class:"edgeHit",tabindex:"0",role:"button","aria-label":r.label},svg);
+  hit.addEventListener("click",()=>{selected=r.id;render()});
+  hit.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();selected=r.id;render()}});
+  const mid=el("text",{x:(ax+bx)/2,y:(ay+by)/2-7,class:"edgeLabel","text-anchor":"middle"},svg);mid.textContent=r.label;
+ }
+ for(const id of caseData.views[view].nodeIds){
+   const n=names.get(id),[x,y]=positions[id];
+   const g=el("g",{class:"node"+(selected===id?" selected":""),tabindex:"0",role:"button","aria-label":n.label},svg);
+   el("rect",{x,y,width:140,height:53,rx:10},g);
+   const t=el("text",{x:x+70,y:y+24,"text-anchor":"middle"},g);t.textContent=n.label;
+   const s=el("text",{x:x+70,y:y+41,class:"nsub","text-anchor":"middle"},g);s.textContent=n.kind==="target"?"设计目标":"对象";
+   const choose=()=>{selected=id;render()};g.addEventListener("click",choose);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();choose()}});
+ }
+}
+function render(){
+ $("views").replaceChildren();
+ for(const key of viewOrder)button($("views"),caseData.views[key].title,view===key,()=>{view=key;render()});
+ $("view-description").textContent=caseData.views[view].description;
+ $("lenses").replaceChildren();
+ for(const key of Object.keys(lensNames))button($("lenses"),lensNames[key],lens===key,()=>{lens=key;render()});
+ const item=findItem(selected);
+ $("item-name").textContent=item?item.label:"未选中对象";
+ $("item-detail").textContent=item?.detail||"";
+ $("standing").replaceChildren();
+ if(item?.standing){const span=document.createElement("span");span.className="pill "+(item.standing==="planned"?"warn":item.standing==="source-implemented"?"ok":"");span.textContent={"planned":"设计目标，未证实实现","source-implemented":"源码存在","tested-locally":"既有局部测试"}[item.standing];$("standing").append(span)}
+ $("lens-question").textContent=caseData.lensQuestions[lens];
+ $("lens-reading").textContent=selected.startsWith("r-")?lensReading(selected,lens):"这是一个对象。五镜主要用于审问关系；请选中相关连线。";
+ $("sources").replaceChildren();
+ for(const url of item?.refs||[]){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=url;$("sources").append(a)}
+ const reading=caseData.assessments.find(a=>a.target===selected);
+ $("assessment").replaceChildren();
+ if(reading){
+  for(const text of [reading.claim,"读数："+reading.status,"方法："+reading.method,"适用范围："+reading.boundary]){
+   const p=document.createElement("p");p.textContent=text;$("assessment").append(p)}
+ }else $("assessment").textContent="本对象尚无单独的评价读数；不能把不存在的证据判为失败或成功。";
+ $("relation-summary").textContent=item?.detail||"";
+ draw();
+}
+render();
+</script>
+</body></html>
