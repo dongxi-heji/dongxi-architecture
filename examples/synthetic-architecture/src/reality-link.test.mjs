@@ -69,3 +69,10 @@ test("wrong method, criteria outside verified scope, or duplicate ID fails close
  const bad2=structuredClone(link);bad2.scope[1].id="api";
  assert(validateRealityLink(bad2).some(e=>e.startsWith("duplicate_or_invalid_scope_id")));
 });
+
+test("success or contradiction without an attributable evidence reference stays Open",()=>{
+ const o=observed();delete o.checks[0].evidenceRef;
+ assert.equal(assessRealityLink(link,o).result,"open");
+ const f=observed();f.checks[1].status="failed";f.checks[1].evidenceRef="";
+ assert.equal(assessRealityLink(link,f).result,"open");
+});
