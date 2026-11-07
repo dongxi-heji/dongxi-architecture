@@ -18,6 +18,12 @@ test("a real analyzer + behavior subprocess creates only limited supported readi
  assert.equal(report.toolRuns.length,2);
  assert.equal(report.sourceObservation.phaseCount,3);
  assert.equal(report.sourceObservation.kind,"sampled_before_between_after_tools");
+ assert.equal(report.sourceSnapshot.contract,"dongxi.synthetic-git-blob-snapshot/v0");
+ assert.equal(report.sourceSnapshot.kind,"git_object_backed_staged_execution");
+ assert.equal(report.sourceSnapshot.sourceCount,5);
+ assert.equal(report.sourceSnapshot.verifiedBeforeBetweenAfterTools,true);
+ assert.equal(report.assessments.demo_lookup.frozenSource.status,"verified");
+ assert.equal(report.assessments.demo_reserve.frozenSource.status,"verified");
  assert.equal(report.assessments.demo_lookup.sourceWindow.status,"equal-at-observation-points");
  assert.equal(report.assessments.demo_reserve.sourceWindow.status,"equal-at-observation-points");
  assert(report.toolRuns.every(x=>x.status==="passed"&&x.evidenceRef),JSON.stringify(report.toolRuns));
