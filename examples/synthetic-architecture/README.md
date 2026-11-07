@@ -12,6 +12,8 @@ npm ci --registry=https://registry.npmjs.org
 npm run check:licenses
 npm run check:model
 npm run analyze
+npm run reality:show
+npm run reality:check
 npm test
 npm run build
 npm run dev
@@ -25,7 +27,7 @@ Open the Vite development server shown in the terminal. For browser E2E, install
 - `npm run generate:model` deterministically rewrites `src/model.c4`; `npm run check:model` fails if a source change was not carried into the derived diagram.
 - `src/bridge.mjs` maps a LikeC4 node or visual edge back to its fictional source ID only when identity is unambiguous. Rendered edges do not establish facts. Missing, merged and ambiguous mappings fail closed.
 - `scripts/check-analysis.mjs` **runs the real** dependency-cruiser executable on the four local synthetic modules and rejects changed imports. It reports the exact included file SHA-256 hashes and version; no external source files are analyzed.
-- The client imports only a public *expected readout*, accurately labeled as build-checkable. Opening a browser does not itself run source analysis and never establishes correctness of an actual service.
+- The client distinguishes the public *expected analyzer readout* from the **actually executed, source-fingerprinted evidence readout** generated at build / dev-server startup. The latter is served same-origin from an ignored generated file and can be reproduced with `npm run reality:show`; opening a browser does not execute a fresh analyzer and cannot establish a production fact.
 - LikeC4 is loaded through React.lazy. `check-bundle.mjs` checks the initial-shell chunk budget, not a runtime performance SLA.
 - The five lenses are **Causation, Meaning, Association, Constitution, Implication**. They are five ways of reading the **same selected source relation**, not five workflow steps or five owners. Every invented relation has a distinct contextual reading under each lens, a stated establishment condition, a bounded effect, and an explicit source standing. Switching the lens never changes the domain relation ID.
 - The fictional API/catalog/ledger behavior is actually executed by local tests; the other drawn handoffs remain `illustrative_only`. A unit test of one in-memory function cannot establish a real production behavior, causal history, privacy claim or deployment.
@@ -48,3 +50,13 @@ The bundle retains an approximately 2.38 MB LikeC4 asynchronous chunk; splitting
 The upstream embeddable LikeC4 React module contains six IBM Plex Sans `@font-face` declarations that use a third-party jsDelivr URL, which the initial Chromium network test caught. This public demo is intended to use **system-font fallback, not any remote CDN font**. The bounded `scripts/offline-fonts.mjs` Vite plugin removes exactly those six declarations at build/development transform time; both an upstream-shape mismatch and a remaining matching CDN URL in generated chunks fail the build. `optimizeDeps.exclude` keeps that dependency from bypassing the transform in development. A Playwright browser test checks all requested HTTP resources are same-origin.
 
 This is a pinned, upstream-internal compatibility workaround—not a universal guarantee for future LikeC4 versions or a standalone security policy. A LikeC4 upgrade requires deliberately reviewing the font-loading behavior and refreshing both the plugin and browser tests. A later product implementation should prefer a supported font override or locally bundled fonts under their license rather than a permanent internal patch.
+
+## Reality Link v0: identity → source → professional checks → assessed reading
+
+The experimental [Reality Link specification](REALITY-LINK.md) is a **thin transport for evidence and provenance**, not another ontology. It binds the explicitly invented `demo_lookup` and `demo_reserve` relations to five exact Git-blob source/test fingerprints, the pinned dependency-cruiser run, and the local behavior test. All other drawn edges remain illustrative.
+
+The outcome is interpreted as **supported-in-scope**, **stale**, **open**, **contradicted-in-scope**, **illustrative-only** or **unbound**. Passing local synthetic checks never upgrades the design standing or claims a real application is deployed. Node 22 and Node 26 both execute the checks against the same committed synthetic source inputs. A changed or missing input invalidates the reading; a different Git revision with the same checked bytes only supports **that checked scope**, not the whole repository.
+
+The entry page now shows the assessed status only for selected relations with real source bindings. The generated `public/reality-readout.json` is ignored by Git and recreated by `npm run build` / `npm run dev`. Its status is captured at **build/dev startup**; edit source code and rerun `npm run reality:show` or restart to refresh. The tests include unchanged, changed, missing, wrong identity, decisive vs nondecisive failures, and source standing that cannot be promoted.
+
+[Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42377529582) validated **37 unit tests, 3 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 238 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
