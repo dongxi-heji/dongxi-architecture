@@ -59,7 +59,7 @@ The outcome is interpreted as **supported-in-scope**, **stale**, **open**, **con
 
 The entry page now shows the assessed status only for selected relations with real source bindings. The generated `public/reality-readout.json` is ignored by Git and recreated by `npm run build` / `npm run dev`. Its status is captured at **build/dev startup**; edit source code and rerun `npm run reality:show` or restart to refresh. The tests include unchanged, changed, missing, wrong identity, decisive vs nondecisive failures, and source standing that cannot be promoted.
 
-[Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42385129736) validated **57 unit tests, 6 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 243 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
+[Integration CI](https://github.com/dongxi-heji/dongxi-architecture/actions/runs/42387560710) validated **66 unit tests, 6 real Chromium tests, Node 22/26 builds, 4 synthetic modules/3 imports**, with an initial JS chunk around 243 KB and an independently loaded LikeC4 chunk around 2.38 MB. That validates this public fixture, not the user’s private software or real-device performance.
 
 
 ## Interactive source inspection and explicit recheck
@@ -87,3 +87,5 @@ The public case now uses `scripts/frozen-source.mjs` to read exactly five **know
 The UI and the generated evidence record distinguish `sourceSnapshot` (which source bytes the tools actually executed) from `sourceObservation` (when the mutable checkout was compared to those bound bytes). A green tool run only supports the declared relation while its current observed scoped content still matches the bound snapshot. It does not establish continuous monitoring, complete repository equivalence, production runtime correctness, or secure isolation from hostile local processes.
 
 Unlike the earlier sampled-worktree-only runner, edits to the checkout during the tool call cannot change the staged Git-object bytes the tools are intended to analyze. This guards the tested input identity, not every possible filesystem adversary or a transient change in the live checkout.
+
+The frozen Node behavior command now verifies the explicit test summary: **exactly two actual test cases, both passed and none skipped or cancelled**, in addition to the subprocess exit status. A nonempty log or a success exit code alone is not accepted as complete behavior evidence.
