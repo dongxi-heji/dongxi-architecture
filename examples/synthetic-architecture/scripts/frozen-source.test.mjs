@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync,writeFileSync,statSync,existsSync} from "node:fs";
+import {readFileSync,writeFileSync,statSync,existsSync,chmodSync} from "node:fs";
 import {resolve} from "node:path";
-import {createFrozenSyntheticScope,gitBlobDigest} from "./frozen-source.mjs";
+import {createFrozenSyntheticScope,gitBlobDigest,guardAssessedFrozenSource} from "./frozen-source.mjs";
 import {PUBLIC_SOURCE_FILES} from "../src/reality-links.mjs";
 
 test("frozen execution tree is built from verified immutable Git blob objects",()=>{
@@ -35,6 +35,7 @@ test("stage integrity is re-read and a missing or modified snapshot refuses proo
  const path=resolve(snapshot.root,PUBLIC_SOURCE_FILES.ledger.path);
  try{
   // Tests mutate only their own isolated public staging directory, never the checkout.
+  chmodSync(path,0o644);
   writeFileSync(path,"// tampered staged copy\n");
   const r=snapshot.verify();
   assert.equal(r.status,"changed");
@@ -47,4 +48,22 @@ test("cleanup is idempotent and does not remove the source worktree",()=>{
  snapshot.cleanup();snapshot.cleanup();
  assert.equal(existsSync(name),false);
  assert.equal(existsSync(new URL("../src/sample-domain/api.mjs",import.meta.url)),true);
+});
+
+test("a corrupted staged tool input cannot be called newly supported",()=>{
+ const prior={result:"supported-in-scope",reason:"checks_passed",sourceStanding:"synthetic_code_checked"};
+ const result=guardAssessedFrozenSource(prior,[{status:"verified"},{status:"changed"}]);
+ assert.equal(result.result,"open");
+ assert.equal(result.reason,"frozen_source_input_integrity_unverified");
+ assert.equal(result.frozenSource.status,"unverified");
+ assert.equal(result.sourceStanding,"synthetic_code_checked");
+});
+test("verified snapshot preserves an existing source-bound reading",()=>{
+ const given={result:"supported-in-scope",reason:"checks_passed"};
+ const ok=guardAssessedFrozenSource(given,[{status:"verified"},{status:"verified"},{status:"verified"}]);
+ assert.equal(ok.result,"supported-in-scope");
+ assert.equal(ok.frozenSource.verifyCount,3);
+ const stale=guardAssessedFrozenSource({result:"stale"},[{status:"changed"},{status:"verified"}]);
+ assert.equal(stale.result,"stale");
+ assert.throws(()=>guardAssessedFrozenSource(given,[{status:"verified"}]),/multiple_checks/);
 });
