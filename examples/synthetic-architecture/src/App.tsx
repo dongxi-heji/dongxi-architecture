@@ -1,4 +1,4 @@
-import {lazy,Suspense,useEffect,useState} from 'react'
+import {lazy,Suspense,useEffect,useRef,useState} from 'react'
 import {fixture,selectItem,readRelationLens,readRelationContract} from './fixture.mjs'
 import {expectedAnalysis} from './analysis-readout.mjs'
 import {listPublicSources} from './source-reading.mjs'
@@ -28,20 +28,26 @@ export function App() {
  const [warning,setWarning]=useState('')
  const [reality,setReality]=useState<RealityReadout|null>(null)
  const [realityError,setRealityError]=useState<string|null>(null)
+ const initialReadoutRequest=useRef<AbortController|null>(null)
  const [sourceSelection,setSourceSelection]=useState<string|null>(null)
  const [recheckPhase,setRecheckPhase]=useState<'idle'|'checking'|'rechecked'|'open'>('idle')
  const [recheckedAt,setRecheckedAt]=useState<string|null>(null)
  useEffect(()=>{
   let mounted=true
-  fetch('/reality-readout.json',{cache:'no-store'})
+  const controller=new AbortController()
+  initialReadoutRequest.current=controller
+  fetch('/reality-readout.json',{cache:'no-store',signal:controller.signal})
    .then(response=>{if(!response.ok)throw Error('evidence_not_generated');return response.json()})
    .then((data:RealityReadout)=>{
     if(data.contract!=='dongxi.reality-replay/v0'||data.sourceKind!=='original_synthetic')
       throw Error('unbound_evidence_contract')
-    if(mounted)setReality(data)
+    if(mounted&&!controller.signal.aborted)setReality(data)
    })
-   .catch(error=>{if(mounted)setRealityError(error instanceof Error?error.message:'unavailable')})
-  return ()=>{mounted=false}
+   .catch(error=>{
+     if(mounted&&!controller.signal.aborted)
+       setRealityError(error instanceof Error?error.message:'unavailable')
+   })
+  return ()=>{mounted=false;controller.abort()}
  },[])
  const item=selectItem(selected)
  const isRelation=fixture.relations.some(x=>x.id===selected)
@@ -52,6 +58,7 @@ export function App() {
  const chosenSource=sourceChoices.find(source=>source.id===sourceSelection)??null
  async function recheckSource() {
   if(recheckPhase==='checking')return
+  initialReadoutRequest.current?.abort()
   setRecheckPhase('checking')
   // Never present cached success as the current result while a new test runs.
   setReality(null)
