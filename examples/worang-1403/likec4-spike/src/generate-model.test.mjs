@@ -36,6 +36,7 @@ test('unsafe LikeC4 identifiers and labels fail without emitting a malformed DSL
   const badId = structuredClone(caseData)
   badId.nodes[0].id = 'project/escaped'
   badId.views.structure.nodeIds[0] = 'project/escaped'
+  badId.views.behavior.nodeIds[0] = 'project/escaped'
   badId.relations[0].from = 'project/escaped'
   assert.throws(() => renderLikeC4Model(badId), /invalid_node_identifier/)
 })
